@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.thinkfirst: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+
+# Development-specific settings
+app:
+  quiz:
+    passing-score: 60  # Lower for testing
+

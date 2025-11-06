@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: thinkfirst-postgres
+    environment:
+      POSTGRES_DB: thinkfirst
+      POSTGRES_USER: thinkfirst
+      POSTGRES_PASSWORD: thinkfirst123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - thinkfirst-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thinkfirst"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: thinkfirst-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - thinkfirst-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Spring Boot Application
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: thinkfirst-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: thinkfirst
+      DB_PASSWORD: thinkfirst123
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # AI Provider Configuration
+      GEMINI_ENABLED: ${GEMINI_ENABLED:-true}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_ENABLED: ${GROQ_ENABLED:-true}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      OPENAI_ENABLED: ${OPENAI_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Security
+      JWT_SECRET: ${JWT_SECRET:-thinkfirst-super-secret-key-change-in-production-min-256-bits}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - thinkfirst-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  thinkfirst-network:
+    driver: bridge
+

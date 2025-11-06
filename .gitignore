@@ -1,0 +1,52 @@
+### IntelliJ IDEA ###
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+.kotlin
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Exclude README.md from git (keep local only) ###
+README.md
+
+### Environment files ###
+.env
+
+### Build artifacts ###
+target/
+build/
+*.jar
+*.war
+*.ear
+
+### Logs ###
+*.log
+logs/
+
+### IDE ###
+.idea/
+*.iml
+*.iws

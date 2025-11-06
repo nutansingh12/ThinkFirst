@@ -1,0 +1,152 @@
+spring:
+  application:
+    name: thinkfirst-backend
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/thinkfirst
+    username: ${DB_USERNAME:thinkfirst}
+    password: ${DB_PASSWORD:thinkfirst123}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  # Cache Configuration for AI responses
+  cache:
+    type: redis
+    redis:
+      time-to-live: 604800000  # 7 days default (overridden per cache type)
+      cache-null-values: false
+      key-prefix: "thinkfirst:"
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# AI Provider Configuration
+ai:
+  # Provider priority order (first available will be used)
+  provider-priority:
+    - gemini
+    - groq
+    - openai
+
+  # Gemini Configuration (Google - Free 1.5M requests/month)
+  gemini:
+    enabled: ${GEMINI_ENABLED:true}
+    api-key: ${GEMINI_API_KEY:}
+    base-url: https://generativelanguage.googleapis.com/v1beta
+    models:
+      default: gemini-1.5-flash
+      advanced: gemini-1.5-pro
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  # Groq Configuration (Free 14,400 requests/day)
+  groq:
+    enabled: ${GROQ_ENABLED:true}
+    api-key: ${GROQ_API_KEY:}
+    base-url: https://api.groq.com/openai/v1
+    models:
+      default: llama-3.1-8b-instant
+      advanced: llama-3.1-70b-versatile
+      alternative: mixtral-8x7b-32768
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  # OpenAI Configuration (Paid - Most reliable fallback)
+  openai:
+    enabled: ${OPENAI_ENABLED:true}
+    api-key: ${OPENAI_API_KEY:}
+    base-url: https://api.openai.com/v1
+    models:
+      default: gpt-3.5-turbo
+      advanced: gpt-4
+      turbo: gpt-4-turbo-preview
+      mini: gpt-4o-mini
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  # Retry and Circuit Breaker Configuration
+  resilience:
+    retry:
+      max-attempts: 3
+      wait-duration: 1000
+    circuit-breaker:
+      failure-rate-threshold: 50
+      wait-duration-in-open-state: 60000
+      sliding-window-size: 10
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:thinkfirst-super-secret-key-change-in-production}
+  expiration: 86400000 # 24 hours in milliseconds
+
+# Application Configuration
+app:
+  quiz:
+    passing-score: 70
+    default-question-count: 5
+    verification-question-count: 3
+  
+  learning:
+    max-daily-questions: 50
+    streak-reset-hours: 24
+  
+  content:
+    moderation-enabled: true
+    age-groups:
+      - name: "Elementary"
+        min-age: 6
+        max-age: 10
+      - name: "Middle School"
+        min-age: 11
+        max-age: 13
+      - name: "High School"
+        min-age: 14
+        max-age: 18
+
+# Logging
+logging:
+  level:
+    com.thinkfirst: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-stacktrace: on_param
+
