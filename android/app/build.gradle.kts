@@ -22,7 +22,7 @@ android {
             useSupportLibrary = true
         }
 
-        // API configuration
+        // API configuration - Default to local development
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
     }
 
@@ -33,9 +33,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Production Railway backend URL
+            buildConfigField("String", "API_BASE_URL", "\"https://thinkfirst-backend-production.up.railway.app/api/\"")
         }
         debug {
             isDebuggable = true
+            // Debug uses local emulator backend
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
         }
     }
 
