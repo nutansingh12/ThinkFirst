@@ -6,7 +6,7 @@ import com.thinkfirst.config.AIProviderConfig;
 import com.thinkfirst.exception.AIProviderException;
 import com.thinkfirst.exception.RateLimitException;
 import com.thinkfirst.model.Question;
-import com.thinkfirst.model.QuestionType;
+import com.thinkfirst.model.Question.QuestionType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
