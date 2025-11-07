@@ -52,7 +52,7 @@ ai:
   # Gemini Configuration (Google - Free 1.5M requests/month)
   gemini:
     enabled: ${GEMINI_ENABLED:true}
-    api-key: ${GEMINI_API_KEY:}
+    api-key: ${GEMINI_API_KEY}
     base-url: https://generativelanguage.googleapis.com/v1beta
     models:
       default: gemini-1.5-flash
@@ -64,7 +64,7 @@ ai:
   # Groq Configuration (Free 14,400 requests/day)
   groq:
     enabled: ${GROQ_ENABLED:true}
-    api-key: ${GROQ_API_KEY:}
+    api-key: ${GROQ_API_KEY}
     base-url: https://api.groq.com/openai/v1
     models:
       default: llama-3.1-8b-instant
