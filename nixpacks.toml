@@ -2,8 +2,8 @@
 nixPkgs = ["...", "jdk17"]
 
 [phases.build]
-cmds = ["mvn clean package -DskipTests -Dmaven.test.skip=true"]
+cmds = ["chmod +x build.sh", "./build.sh"]
 
 [start]
-cmd = "java -jar target/*.jar"
+cmd = "java -jar target/thinkfirst-backend-1.0.0-SNAPSHOT.jar"
 
