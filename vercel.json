@@ -20,8 +20,8 @@
   "env": {
     "SPRING_PROFILES_ACTIVE": "prod",
     "DATABASE_URL": "@database-url",
-    "REDIS_HOST": "@redis-host",
-    "REDIS_PORT": "@redis-port",
+    "REDISHOST": "@redis-host",
+    "REDISPORT": "@redis-port",
     "JWT_SECRET": "@jwt-secret",
     "GEMINI_API_KEY": "@gemini-api-key",
     "GROQ_API_KEY": "@groq-api-key",

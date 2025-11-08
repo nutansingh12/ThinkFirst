@@ -57,8 +57,8 @@ SPRING_DATASOURCE_USERNAME=your_username
 SPRING_DATASOURCE_PASSWORD=your_password
 
 # Redis
-REDIS_HOST=your-redis-host.upstash.io
-REDIS_PORT=6379
+REDISHOST=your-redis-host.upstash.io
+REDISPORT=6379
 REDIS_PASSWORD=your_redis_password
 
 # JWT
@@ -466,7 +466,7 @@ docker-compose up -d
 - Ensure database is running
 
 ### Redis connection failed
-- Verify REDIS_HOST and REDIS_PORT
+- Verify REDISHOST and REDISPORT
 - Check Redis password
 - Ensure Redis is running
 

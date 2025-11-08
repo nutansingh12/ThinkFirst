@@ -47,8 +47,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       DB_USERNAME: thinkfirst
       DB_PASSWORD: thinkfirst123
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDISHOST: redis
+      REDISPORT: 6379
       # AI Provider Configuration
       GEMINI_ENABLED: ${GEMINI_ENABLED:-true}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
