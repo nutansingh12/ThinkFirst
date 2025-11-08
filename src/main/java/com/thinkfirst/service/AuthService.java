@@ -30,19 +30,20 @@ public class AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
-        
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
                 .firstName(request.getFullName().split(" ")[0])
-                .lastName(request.getFullName().length() > request.getFullName().split(" ")[0].length() 
-                        ? request.getFullName().substring(request.getFullName().split(" ")[0].length() + 1) 
+                .lastName(request.getFullName().length() > request.getFullName().split(" ")[0].length()
+                        ? request.getFullName().substring(request.getFullName().split(" ")[0].length() + 1)
                         : "")
                 .role(User.UserRole.valueOf(request.getRole() != null ? request.getRole() : "PARENT"))
                 .active(true)
                 .emailVerified(false)
                 .build();
-        
+
         user = userRepository.save(user);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
