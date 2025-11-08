@@ -3,7 +3,7 @@ spring:
     name: thinkfirst-backend
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/thinkfirst
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/thinkfirst}
     username: ${DB_USERNAME:thinkfirst}
     password: ${DB_PASSWORD:thinkfirst123}
     driver-class-name: org.postgresql.Driver
