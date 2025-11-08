@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -41,6 +42,12 @@ class AuthServiceTest {
     @Mock
     private JwtTokenProvider jwtTokenProvider;
 
+    @Mock
+    private org.springframework.security.authentication.AuthenticationManager authenticationManager;
+
+    @Mock
+    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -52,12 +59,12 @@ class AuthServiceTest {
     void setUp() {
         testUser = new User();
         testUser.setId(1L);
-        testUser.setUsername("test@example.com");
+        testUser.setEmail("test@example.com");
         testUser.setPassword("encodedPassword");
         testUser.setFullName("Test User");
 
         registerRequest = new RegisterRequest();
-        registerRequest.setUsername("test@example.com");
+        registerRequest.setEmail("test@example.com");
         registerRequest.setPassword("Test123!");
         registerRequest.setFullName("Test User");
 
@@ -71,7 +78,7 @@ class AuthServiceTest {
     @Test
     void testRegister_WithValidData_ShouldCreateUserAndReturnTokens() {
         // Arrange
-        when(userRepository.existsByUsername(anyString())).thenReturn(false);
+        when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(jwtTokenProvider.generateToken(any(UserDetails.class))).thenReturn("accessToken");
@@ -89,7 +96,7 @@ class AuthServiceTest {
         assertThat(response.getFullName()).isEqualTo("Test User");
 
         // Verify
-        verify(userRepository).existsByUsername("test@example.com");
+        verify(userRepository).existsByEmail("test@example.com");
         verify(passwordEncoder).encode("Test123!");
         verify(userRepository).save(any(User.class));
         verify(jwtTokenProvider).generateToken(any(UserDetails.class));
@@ -99,15 +106,15 @@ class AuthServiceTest {
     @Test
     void testRegister_WithExistingUsername_ShouldThrowException() {
         // Arrange
-        when(userRepository.existsByUsername(anyString())).thenReturn(true);
+        when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
         // Act & Assert
         assertThatThrownBy(() -> authService.register(registerRequest))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Username already exists");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Email already registered");
 
         // Verify
-        verify(userRepository).existsByUsername("test@example.com");
+        verify(userRepository).existsByEmail("test@example.com");
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -116,7 +123,7 @@ class AuthServiceTest {
     @Test
     void testLogin_WithCorrectCredentials_ShouldReturnTokens() {
         // Arrange
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
         when(jwtTokenProvider.generateToken(any(UserDetails.class))).thenReturn("accessToken");
         when(jwtTokenProvider.generateRefreshToken(any(UserDetails.class))).thenReturn("refreshToken");
@@ -132,7 +139,7 @@ class AuthServiceTest {
         assertThat(response.getEmail()).isEqualTo("test@example.com");
 
         // Verify
-        verify(userRepository).findByUsername("test@example.com");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder).matches("Test123!", "encodedPassword");
         verify(jwtTokenProvider).generateToken(any(UserDetails.class));
         verify(jwtTokenProvider).generateRefreshToken(any(UserDetails.class));
@@ -141,7 +148,7 @@ class AuthServiceTest {
     @Test
     void testLogin_WithIncorrectPassword_ShouldThrowException() {
         // Arrange
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // Act & Assert
@@ -150,7 +157,7 @@ class AuthServiceTest {
                 .hasMessageContaining("Invalid credentials");
 
         // Verify
-        verify(userRepository).findByUsername("test@example.com");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder).matches("Test123!", "encodedPassword");
         verify(jwtTokenProvider, never()).generateToken(any(UserDetails.class));
     }
@@ -158,7 +165,7 @@ class AuthServiceTest {
     @Test
     void testLogin_WithNonExistentUser_ShouldThrowException() {
         // Arrange
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> authService.login(loginRequest))
@@ -166,7 +173,7 @@ class AuthServiceTest {
                 .hasMessageContaining("User not found");
 
         // Verify
-        verify(userRepository).findByUsername("test@example.com");
+        verify(userRepository).findByEmail("test@example.com");
         verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
 
@@ -177,8 +184,8 @@ class AuthServiceTest {
         // Arrange
         String refreshToken = "validRefreshToken";
         when(jwtTokenProvider.extractUsername(refreshToken)).thenReturn("test@example.com");
-        when(jwtTokenProvider.validateToken(refreshToken, testUser)).thenReturn(true);
-        when(userRepository.findByUsername("test@example.com")).thenReturn(Optional.of(testUser));
+        when(jwtTokenProvider.isTokenValid(eq(refreshToken), any(UserDetails.class))).thenReturn(true);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(jwtTokenProvider.generateToken(any(UserDetails.class))).thenReturn("newAccessToken");
         when(jwtTokenProvider.generateRefreshToken(any(UserDetails.class))).thenReturn("newRefreshToken");
 
@@ -193,7 +200,7 @@ class AuthServiceTest {
 
         // Verify
         verify(jwtTokenProvider).extractUsername(refreshToken);
-        verify(jwtTokenProvider).validateToken(refreshToken, testUser);
+        verify(jwtTokenProvider).isTokenValid(eq(refreshToken), any(UserDetails.class));
         verify(jwtTokenProvider).generateToken(any(UserDetails.class));
         verify(jwtTokenProvider).generateRefreshToken(any(UserDetails.class));
     }
@@ -203,8 +210,8 @@ class AuthServiceTest {
         // Arrange
         String expiredToken = "expiredRefreshToken";
         when(jwtTokenProvider.extractUsername(expiredToken)).thenReturn("test@example.com");
-        when(userRepository.findByUsername("test@example.com")).thenReturn(Optional.of(testUser));
-        when(jwtTokenProvider.validateToken(expiredToken, testUser)).thenReturn(false);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(jwtTokenProvider.isTokenValid(eq(expiredToken), any(UserDetails.class))).thenReturn(false);
 
         // Act & Assert
         assertThatThrownBy(() -> authService.refreshToken(expiredToken))
@@ -213,7 +220,7 @@ class AuthServiceTest {
 
         // Verify
         verify(jwtTokenProvider).extractUsername(expiredToken);
-        verify(jwtTokenProvider).validateToken(expiredToken, testUser);
+        verify(jwtTokenProvider).isTokenValid(eq(expiredToken), any(UserDetails.class));
         verify(jwtTokenProvider, never()).generateToken(any(UserDetails.class));
     }
 
@@ -238,7 +245,7 @@ class AuthServiceTest {
         // Arrange
         String refreshToken = "validRefreshToken";
         when(jwtTokenProvider.extractUsername(refreshToken)).thenReturn("nonexistent@example.com");
-        when(userRepository.findByUsername("nonexistent@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> authService.refreshToken(refreshToken))
@@ -247,7 +254,7 @@ class AuthServiceTest {
 
         // Verify
         verify(jwtTokenProvider).extractUsername(refreshToken);
-        verify(userRepository).findByUsername("nonexistent@example.com");
+        verify(userRepository).findByEmail("nonexistent@example.com");
     }
 
     // Token Rotation Tests
@@ -258,8 +265,8 @@ class AuthServiceTest {
         String oldRefreshToken = "oldRefreshToken";
         String newRefreshToken = "newRefreshToken";
         when(jwtTokenProvider.extractUsername(oldRefreshToken)).thenReturn("test@example.com");
-        when(userRepository.findByUsername("test@example.com")).thenReturn(Optional.of(testUser));
-        when(jwtTokenProvider.validateToken(oldRefreshToken, testUser)).thenReturn(true);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(jwtTokenProvider.isTokenValid(eq(oldRefreshToken), any(UserDetails.class))).thenReturn(true);
         when(jwtTokenProvider.generateToken(any(UserDetails.class))).thenReturn("newAccessToken");
         when(jwtTokenProvider.generateRefreshToken(any(UserDetails.class))).thenReturn(newRefreshToken);
 
