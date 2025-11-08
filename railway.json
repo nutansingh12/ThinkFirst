@@ -5,7 +5,7 @@
     "buildCommand": "mvn clean package -DskipTests"
   },
   "deploy": {
-    "startCommand": "java -jar target/thinkfirst-0.0.1-SNAPSHOT.jar",
+    "startCommand": "java -jar target/thinkfirst-backend-1.0.0-SNAPSHOT.jar",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
