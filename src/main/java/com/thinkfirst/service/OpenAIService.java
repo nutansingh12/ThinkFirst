@@ -10,6 +10,7 @@ import com.thinkfirst.model.Question;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,8 +20,9 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnBean(com.theokanning.openai.service.OpenAiService.class)
 public class OpenAIService {
-    
+
     private final com.theokanning.openai.service.OpenAiService openAiService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     
