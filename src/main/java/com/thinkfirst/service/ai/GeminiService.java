@@ -7,7 +7,8 @@ import com.thinkfirst.exception.AIProviderException;
 import com.thinkfirst.exception.RateLimitException;
 import com.thinkfirst.model.Question;
 import com.thinkfirst.model.Question.QuestionType;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,9 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @Service
 public class GeminiService implements AIProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(GeminiService.class);
     
     private final WebClient webClient;
     private final AIProviderConfig config;

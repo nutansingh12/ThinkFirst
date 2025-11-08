@@ -6,8 +6,8 @@ import com.thinkfirst.model.Child;
 import com.thinkfirst.model.SkillLevel;
 import com.thinkfirst.model.Subject;
 import com.thinkfirst.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,15 +18,28 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class ProgressTrackingService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(ProgressTrackingService.class);
+
     private final ChildRepository childRepository;
     private final SkillLevelRepository skillLevelRepository;
     private final QuizAttemptRepository quizAttemptRepository;
     private final AchievementRepository achievementRepository;
     private final SubjectRepository subjectRepository;
+
+    public ProgressTrackingService(
+            ChildRepository childRepository,
+            SkillLevelRepository skillLevelRepository,
+            QuizAttemptRepository quizAttemptRepository,
+            AchievementRepository achievementRepository,
+            SubjectRepository subjectRepository) {
+        this.childRepository = childRepository;
+        this.skillLevelRepository = skillLevelRepository;
+        this.quizAttemptRepository = quizAttemptRepository;
+        this.achievementRepository = achievementRepository;
+        this.subjectRepository = subjectRepository;
+    }
     
     /**
      * Check if child has met prerequisites for a subject

@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.thinkfirst.android.presentation.chat.ChatScreen
+import androidx.navigation.compose.rememberNavController
+import com.thinkfirst.android.navigation.ThinkFirstNavigation
 import com.thinkfirst.android.ui.theme.ThinkFirstTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -21,9 +22,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // TODO: Add proper navigation and authentication
-                    // For now, using a demo child ID
-                    ChatScreen(childId = 1L)
+                    val navController = rememberNavController()
+                    ThinkFirstNavigation(navController = navController)
                 }
             }
         }

@@ -1,6 +1,7 @@
 package com.thinkfirst.android.di
 
 import com.thinkfirst.android.BuildConfig
+import com.thinkfirst.android.data.api.AuthInterceptor
 import com.thinkfirst.android.data.api.ThinkFirstApi
 import dagger.Module
 import dagger.Provides
@@ -16,10 +17,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    
+
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BODY
@@ -27,8 +28,9 @@ object NetworkModule {
                 HttpLoggingInterceptor.Level.NONE
             }
         }
-        
+
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor) // Add auth interceptor first
             .addInterceptor(loggingInterceptor)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()

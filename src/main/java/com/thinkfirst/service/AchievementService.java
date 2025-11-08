@@ -3,19 +3,23 @@ package com.thinkfirst.service;
 import com.thinkfirst.model.Achievement;
 import com.thinkfirst.model.Child;
 import com.thinkfirst.repository.AchievementRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class AchievementService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(AchievementService.class);
+
     private final AchievementRepository achievementRepository;
+
+    public AchievementService(AchievementRepository achievementRepository) {
+        this.achievementRepository = achievementRepository;
+    }
     
     /**
      * Check and award achievements based on quiz performance

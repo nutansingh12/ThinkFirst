@@ -3,8 +3,8 @@ package com.thinkfirst.service.cache;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thinkfirst.model.Question;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +20,17 @@ import java.util.Optional;
  * Target: 70-80% cache hit rate
  */
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class AICacheService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(AICacheService.class);
+
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+
+    public AICacheService(RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
+    }
     
     // Cache TTL configurations
     private static final Duration QUIZ_CACHE_TTL = Duration.ofDays(30); // Quizzes rarely change

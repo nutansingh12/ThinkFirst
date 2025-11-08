@@ -17,12 +17,15 @@ import java.util.function.Function;
 
 @Component
 public class JwtTokenProvider {
-    
+
     @Value("${jwt.secret}")
     private String secretKey;
-    
+
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+
+    @Value("${jwt.refresh-expiration:604800000}") // 7 days default
+    private long refreshExpiration;
     
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -36,9 +39,15 @@ public class JwtTokenProvider {
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
-    
+
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return buildToken(extraClaims, userDetails, jwtExpiration);
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("tokenType", "refresh");
+        return buildToken(claims, userDetails, refreshExpiration);
     }
     
     private String buildToken(
@@ -71,14 +80,14 @@ public class JwtTokenProvider {
     
     private Claims extractAllClaims(String token) {
         return Jwts
-                .parserBuilder()
-                .setSigningKey(getSignInKey())
+                .parser()
+                .verifyWith(getSignInKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
     
-    private Key getSignInKey() {
+    private javax.crypto.SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

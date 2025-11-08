@@ -22,6 +22,7 @@ import com.thinkfirst.android.data.model.MessageRole
 @Composable
 fun ChatScreen(
     childId: Long,
+    onNavigateToDashboard: (() -> Unit)? = null,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()

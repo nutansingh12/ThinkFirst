@@ -2,6 +2,7 @@ package com.thinkfirst.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -19,6 +20,7 @@ import java.util.List;
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -36,12 +38,19 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
+    private String firstName;
+
+    private String lastName;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role; // PARENT, EDUCATOR, ADMIN
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    @Column(nullable = false)
+    private Boolean emailVerified = false;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Child> children = new ArrayList<>();

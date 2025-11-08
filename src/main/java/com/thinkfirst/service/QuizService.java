@@ -5,8 +5,8 @@ import com.thinkfirst.dto.QuizResult;
 import com.thinkfirst.dto.QuizSubmission;
 import com.thinkfirst.model.*;
 import com.thinkfirst.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,23 +17,40 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class QuizService {
-    
-    private final QuizRepository quizRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(QuizService.class);
+
+    public final QuizRepository quizRepository;
     private final QuizAttemptRepository quizAttemptRepository;
     private final ChildRepository childRepository;
     private final SubjectRepository subjectRepository;
     private final SkillLevelRepository skillLevelRepository;
     private final com.thinkfirst.service.ai.AIProviderService aiProviderService;
     private final AchievementService achievementService;
-    
+
     @Value("${app.quiz.passing-score}")
     private Integer passingScore;
-    
+
     @Value("${app.quiz.default-question-count}")
     private Integer defaultQuestionCount;
+
+    public QuizService(
+            QuizRepository quizRepository,
+            QuizAttemptRepository quizAttemptRepository,
+            ChildRepository childRepository,
+            SubjectRepository subjectRepository,
+            SkillLevelRepository skillLevelRepository,
+            com.thinkfirst.service.ai.AIProviderService aiProviderService,
+            AchievementService achievementService) {
+        this.quizRepository = quizRepository;
+        this.quizAttemptRepository = quizAttemptRepository;
+        this.childRepository = childRepository;
+        this.subjectRepository = subjectRepository;
+        this.skillLevelRepository = skillLevelRepository;
+        this.aiProviderService = aiProviderService;
+        this.achievementService = achievementService;
+    }
     
     /**
      * Generate a prerequisite quiz for a subject

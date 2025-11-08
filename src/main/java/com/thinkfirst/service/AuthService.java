@@ -44,12 +44,14 @@ public class AuthService {
                 .build();
         
         user = userRepository.save(user);
-        
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtTokenProvider.generateToken(userDetails);
-        
+        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFirstName() + " " + user.getLastName())
@@ -61,15 +63,45 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
-        
+
         User user = userRepository.findByEmail(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtTokenProvider.generateToken(userDetails);
-        
+        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
+                .userId(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFirstName() + " " + user.getLastName())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    /**
+     * Refresh access token using refresh token
+     */
+    public AuthResponse refreshToken(String refreshToken) {
+        String username = jwtTokenProvider.extractUsername(refreshToken);
+
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+
+        if (!jwtTokenProvider.isTokenValid(refreshToken, userDetails)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        String newAccessToken = jwtTokenProvider.generateToken(userDetails);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+        return AuthResponse.builder()
+                .token(newAccessToken)
+                .refreshToken(newRefreshToken)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFirstName() + " " + user.getLastName())

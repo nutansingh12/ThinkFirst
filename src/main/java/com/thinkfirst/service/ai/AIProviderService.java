@@ -5,7 +5,8 @@ import com.thinkfirst.exception.AIProviderException;
 import com.thinkfirst.exception.RateLimitException;
 import com.thinkfirst.model.Question;
 import com.thinkfirst.service.cache.AICacheService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -17,9 +18,10 @@ import java.util.Optional;
  * Hybrid AI Provider Service that manages multiple AI providers with fallback logic.
  * Priority: Gemini (free) → Groq (free) → OpenAI (paid)
  */
-@Slf4j
 @Service
 public class AIProviderService {
+
+    private static final Logger log = LoggerFactory.getLogger(AIProviderService.class);
     
     private final Map<String, AIProvider> providers;
     private final AIProviderConfig config;

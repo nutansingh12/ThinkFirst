@@ -102,6 +102,7 @@ ai:
 jwt:
   secret: ${JWT_SECRET:thinkfirst-super-secret-key-change-in-production}
   expiration: 86400000 # 24 hours in milliseconds
+  refresh-expiration: 604800000 # 7 days in milliseconds
 
 # Application Configuration
 app:

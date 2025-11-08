@@ -2,10 +2,11 @@ package com.thinkfirst.service;
 
 import com.thinkfirst.dto.ChatRequest;
 import com.thinkfirst.dto.ChatResponse;
+import com.thinkfirst.dto.ModerationResult;
 import com.thinkfirst.model.*;
 import com.thinkfirst.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +17,10 @@ import java.util.List;
  * Core service implementing quiz-gated chat logic
  */
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class ChatService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
+
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChildRepository childRepository;
@@ -28,6 +29,28 @@ public class ChatService {
     private final com.thinkfirst.service.ai.AIProviderService aiProviderService;
     private final QuizService quizService;
     private final ProgressTrackingService progressTrackingService;
+    private final ContentModerationService contentModerationService;
+
+    public ChatService(
+            ChatSessionRepository chatSessionRepository,
+            ChatMessageRepository chatMessageRepository,
+            ChildRepository childRepository,
+            SubjectRepository subjectRepository,
+            SkillLevelRepository skillLevelRepository,
+            com.thinkfirst.service.ai.AIProviderService aiProviderService,
+            QuizService quizService,
+            ProgressTrackingService progressTrackingService,
+            ContentModerationService contentModerationService) {
+        this.chatSessionRepository = chatSessionRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.childRepository = childRepository;
+        this.subjectRepository = subjectRepository;
+        this.skillLevelRepository = skillLevelRepository;
+        this.aiProviderService = aiProviderService;
+        this.quizService = quizService;
+        this.progressTrackingService = progressTrackingService;
+        this.contentModerationService = contentModerationService;
+    }
     
     /**
      * Process a chat query with quiz-gating logic
@@ -41,13 +64,46 @@ public class ChatService {
                 .orElseThrow(() -> new RuntimeException("Chat session not found"));
         
         String query = request.getQuery();
-        
-        // Save user message
+
+        // Step 1: Content Moderation - Check if query is appropriate
+        ModerationResult moderationResult = contentModerationService.moderateContent(query);
+
+        if (moderationResult.isFlagged()) {
+            log.warn("Query flagged by moderation for child {}: {}", child.getId(), moderationResult.getReason());
+
+            // Save flagged user message
+            ChatMessage flaggedMessage = ChatMessage.builder()
+                    .chatSession(session)
+                    .role(ChatMessage.MessageRole.USER)
+                    .content(query)
+                    .contentModeration("FLAGGED: " + moderationResult.getReason())
+                    .build();
+            chatMessageRepository.save(flaggedMessage);
+
+            // Return error response
+            String safetyMessage = "I'm sorry, but I can't help with that question. " +
+                    "Let's talk about something educational and appropriate instead! " +
+                    "What would you like to learn about today?";
+
+            ChatMessage safetyResponse = ChatMessage.builder()
+                    .chatSession(session)
+                    .role(ChatMessage.MessageRole.ASSISTANT)
+                    .content(safetyMessage)
+                    .build();
+            chatMessageRepository.save(safetyResponse);
+
+            return ChatResponse.builder()
+                    .message(safetyMessage)
+                    .responseType(ChatResponse.ResponseType.FULL_ANSWER)
+                    .build();
+        }
+
+        // Save approved user message
         ChatMessage userMessage = ChatMessage.builder()
                 .chatSession(session)
                 .role(ChatMessage.MessageRole.USER)
                 .content(query)
-                .contentModeration("APPROVED") // TODO: Implement moderation
+                .contentModeration("APPROVED")
                 .build();
         chatMessageRepository.save(userMessage);
         
