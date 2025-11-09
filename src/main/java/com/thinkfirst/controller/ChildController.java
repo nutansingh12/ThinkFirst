@@ -33,6 +33,12 @@ public class ChildController {
         return ResponseEntity.ok(childService.getParentChildren(parentId));
     }
 
+    @GetMapping("/all")
+    @Operation(summary = "Get all children (debug endpoint)")
+    public ResponseEntity<List<ChildResponse>> getAllChildren() {
+        return ResponseEntity.ok(childService.getAllChildren());
+    }
+
     @GetMapping("/{childId}")
     @Operation(summary = "Get child by ID")
     public ResponseEntity<ChildResponse> getChild(@PathVariable Long childId) {

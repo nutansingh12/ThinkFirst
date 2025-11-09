@@ -65,6 +65,12 @@ public class ChildService {
                 .collect(Collectors.toList());
     }
 
+    public List<ChildResponse> getAllChildren() {
+        return childRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public ChildResponse getChild(Long childId) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Child not found"));
