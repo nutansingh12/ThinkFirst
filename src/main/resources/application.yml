@@ -24,6 +24,8 @@ spring:
   
   data:
     redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      # Fallback to individual properties if REDIS_URL is not set
       host: ${REDISHOST:localhost}
       port: ${REDISPORT:6379}
       password: ${REDIS_PASSWORD:}
