@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: DATABASE_URL:jdbc:postgresql://postgres:5432/thinkfirst
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/thinkfirst}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   
