@@ -2,8 +2,6 @@ package com.thinkfirst.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,32 +17,43 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ChatSession {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "child_id", nullable = false)
     private Child child;
-    
+
     private String title;
-    
+
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatMessage> messages = new ArrayList<>();
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private Subject subject;
-    
+
     private Integer messageCount = 0;
-    
-    @CreatedDate
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    @LastModifiedDate
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
-    
+
     private Boolean archived = false;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
 
