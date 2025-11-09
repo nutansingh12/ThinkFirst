@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/thinkfirst}
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:}
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:thinkfirst}
+    username: ${PGUSER:postgres}
+    password: ${PGPASSWORD:}
   data:
     redis:
       host: ${REDISHOST:localhost}
