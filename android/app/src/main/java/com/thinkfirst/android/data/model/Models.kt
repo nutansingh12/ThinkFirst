@@ -15,14 +15,42 @@ data class RegisterRequest(
     val role: String = "PARENT"
 )
 
+data class ChildLoginRequest(
+    val username: String,
+    val password: String
+)
+
 data class AuthResponse(
     val token: String,
     val refreshToken: String?,
     val type: String = "Bearer",
     val userId: Long,
-    val email: String,
+    val email: String?,
     val fullName: String,
     val role: String
+)
+
+// Child Management Models
+data class ChildProfile(
+    val id: Long,
+    val username: String,
+    val age: Int,
+    val gradeLevel: String?,
+    val parentId: Long,
+    val currentStreak: Int,
+    val totalQuestionsAnswered: Int,
+    val totalQuizzesCompleted: Int,
+    val lastActiveDate: String?,
+    val active: Boolean,
+    val createdAt: String
+)
+
+data class CreateChildRequest(
+    val username: String,
+    val password: String,
+    val age: Int,
+    val gradeLevel: String?,
+    val parentId: Long
 )
 
 // Chat Models
@@ -34,7 +62,9 @@ data class ChatRequest(
 
 data class ChatResponse(
     val message: String?,
+    val response: String?,  // Added for backend compatibility
     val responseType: ResponseType,
+    val responseLevel: String?,  // Added for backend compatibility
     val quiz: Quiz?,
     val hint: String?,
     val messageId: Long?
@@ -96,6 +126,7 @@ data class Question(
     val type: QuestionType,
     val options: List<String>?,
     val correctOptionIndex: Int?,
+    val correctAnswer: String?,  // Added for backend compatibility
     val explanation: String?
 )
 
@@ -145,16 +176,16 @@ data class QuizSubmission(
     val childId: Long,
     val quizId: Long,
     val answers: Map<Long, String>,
-    val timeSpentSeconds: Int?
+    val timeSpentSeconds: Int? = null
 )
 
 data class QuizResult(
-    val attemptId: Long,
+    val attemptId: Long = 0,
     val score: Int,
     val passed: Boolean,
-    val responseLevel: ResponseType,
-    val feedbackMessage: String,
-    val questionResults: List<QuestionResult>,
+    val responseLevel: ResponseType = ResponseType.FULL_ANSWER,
+    val feedbackMessage: String = "",
+    val questionResults: List<QuestionResult> = emptyList(),
     val totalQuestions: Int,
     val correctAnswers: Int
 )
@@ -174,7 +205,10 @@ data class ProgressReport(
     val childUsername: String,
     val currentStreak: Int,
     val totalQuizzesCompleted: Int,
+    val totalQuizzesTaken: Int = 0,  // Added for backward compatibility
     val totalQuestionsAnswered: Int,
+    val totalQuestionsAsked: Int = 0,  // Added for backward compatibility
+    val totalTimeSpentMinutes: Int = 0,  // Added for backward compatibility
     val averageScore: Double,
     val skillLevels: List<SkillLevel>,
     val recentAchievements: List<Achievement>,
@@ -200,6 +234,7 @@ data class SubjectProgress(
 data class Achievement(
     val id: Long,
     val badgeName: String,
+    val name: String? = null,  // Added for backward compatibility
     val description: String?,
     val iconUrl: String?,
     val type: AchievementType,

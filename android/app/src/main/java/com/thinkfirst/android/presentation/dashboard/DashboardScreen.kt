@@ -232,12 +232,12 @@ fun AchievementCard(achievement: com.thinkfirst.android.data.model.Achievement) 
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = achievement.name,
+                    text = achievement.name ?: achievement.badgeName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = achievement.description,
+                    text = achievement.description ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

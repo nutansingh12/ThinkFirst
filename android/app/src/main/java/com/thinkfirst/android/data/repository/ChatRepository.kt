@@ -39,7 +39,7 @@ class ChatRepository @Inject constructor(
         return try {
             if (networkMonitor.isCurrentlyConnected()) {
                 // Online: Send to API
-                val request = ChatRequest(childId = childId, query = query)
+                val request = ChatRequest(childId = childId, sessionId = sessionId, query = query)
                 val response = api.sendQuery(request)
                 
                 // Cache the response
@@ -125,8 +125,8 @@ class ChatRepository @Inject constructor(
                 sessionId = sessionId,
                 childId = childId,
                 query = query,
-                response = response.response,
-                responseLevel = response.responseLevel,
+                response = response.response ?: response.message ?: "",
+                responseLevel = response.responseLevel ?: response.responseType.name,
                 timestamp = System.currentTimeMillis(),
                 isSynced = true,
                 quizId = response.quiz?.id,

@@ -194,18 +194,18 @@ private fun QuizContentView(
             }
             
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Answer options
-            currentQuestion.options.forEach { option ->
+            currentQuestion.options?.forEach { option ->
                 val isSelected = selectedAnswers[currentQuestion.id] == option
-                
+
                 AnswerOption(
                     text = option,
                     isSelected = isSelected,
                     onClick = { onAnswerSelected(currentQuestion.id, option) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }

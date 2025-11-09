@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thinkfirst.android.data.api.ThinkFirstApi
 import com.thinkfirst.android.data.local.TokenManager
+import com.thinkfirst.android.data.model.ChildLoginRequest
 import com.thinkfirst.android.data.model.LoginRequest
 import com.thinkfirst.android.data.model.RegisterRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -161,6 +162,47 @@ class AuthViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Child login with username and password
+     */
+    fun childLogin(username: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            try {
+                val response = api.childLogin(ChildLoginRequest(username, password))
+
+                // For child login, the userId is actually the child ID
+                val childId = response.userId
+
+                tokenManager.saveTokens(
+                    accessToken = response.token,
+                    refreshToken = response.refreshToken ?: "",
+                    userId = response.userId,
+                    childId = childId,
+                    email = response.email ?: "",
+                    fullName = response.fullName
+                )
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isAuthenticated = true,
+                    token = response.token,
+                    refreshToken = response.refreshToken,
+                    userId = response.userId,
+                    childId = childId,
+                    email = response.email,
+                    fullName = response.fullName
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Login failed. Please check your username and password."
+                )
+            }
+        }
+    }
+
     /**
      * Logout user
      */

@@ -55,8 +55,8 @@ class QuizRepository @Inject constructor(
                     passed = false,
                     totalQuestions = answers.size,
                     correctAnswers = 0,
-                    results = emptyList(),
-                    message = "Quiz saved offline. Will be submitted when online."
+                    questionResults = emptyList(),
+                    feedbackMessage = "Quiz saved offline. Will be submitted when online."
                 )
                 
                 cacheAttempt(quizId, childId, offlineResult, answers, isSynced = false)
@@ -73,8 +73,8 @@ class QuizRepository @Inject constructor(
                     passed = false,
                     totalQuestions = answers.size,
                     correctAnswers = 0,
-                    results = emptyList(),
-                    message = "Quiz saved offline. Will be submitted when online."
+                    questionResults = emptyList(),
+                    feedbackMessage = "Quiz saved offline. Will be submitted when online."
                 )
                 cacheAttempt(quizId, childId, offlineResult, answers, isSynced = false)
             }

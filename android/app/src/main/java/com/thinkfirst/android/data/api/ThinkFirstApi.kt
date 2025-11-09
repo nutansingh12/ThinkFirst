@@ -4,14 +4,36 @@ import com.thinkfirst.android.data.model.*
 import retrofit2.http.*
 
 interface ThinkFirstApi {
-    
+
     // Authentication
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): AuthResponse
-    
+
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
-    
+
+    @POST("auth/child/login")
+    suspend fun childLogin(@Body request: ChildLoginRequest): AuthResponse
+
+    // Child Management
+    @POST("children")
+    suspend fun createChild(@Body request: CreateChildRequest): ChildProfile
+
+    @GET("children/parent/{parentId}")
+    suspend fun getParentChildren(@Path("parentId") parentId: Long): List<ChildProfile>
+
+    @GET("children/{childId}")
+    suspend fun getChild(@Path("childId") childId: Long): ChildProfile
+
+    @PUT("children/{childId}")
+    suspend fun updateChild(
+        @Path("childId") childId: Long,
+        @Body request: CreateChildRequest
+    ): ChildProfile
+
+    @DELETE("children/{childId}")
+    suspend fun deleteChild(@Path("childId") childId: Long)
+
     // Chat
     @POST("chat/query")
     suspend fun sendQuery(@Body request: ChatRequest): ChatResponse

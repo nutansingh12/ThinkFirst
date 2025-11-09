@@ -50,8 +50,8 @@ class Converters {
 data class QuizQuestionEntity(
     val id: Long,
     val questionText: String,
-    val options: List<String>,
-    val correctAnswer: String,
-    val explanation: String
+    val options: List<String>?,
+    val correctAnswer: String?,
+    val explanation: String?
 )
 

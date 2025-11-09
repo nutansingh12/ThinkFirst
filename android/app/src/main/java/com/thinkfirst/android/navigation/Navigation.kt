@@ -6,9 +6,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.thinkfirst.android.presentation.auth.ChildLoginScreen
+import com.thinkfirst.android.presentation.auth.LoginModeScreen
 import com.thinkfirst.android.presentation.auth.LoginScreen
 import com.thinkfirst.android.presentation.auth.RegisterScreen
 import com.thinkfirst.android.presentation.chat.ChatScreen
+import com.thinkfirst.android.presentation.children.ChildManagementScreen
 import com.thinkfirst.android.presentation.dashboard.DashboardScreen
 import com.thinkfirst.android.presentation.quiz.QuizScreen
 
@@ -16,8 +19,11 @@ import com.thinkfirst.android.presentation.quiz.QuizScreen
  * Navigation routes for the app
  */
 sealed class Screen(val route: String) {
-    object Login : Screen("login")
+    object LoginMode : Screen("login_mode")
+    object ParentLogin : Screen("parent_login")
+    object ChildLogin : Screen("child_login")
     object Register : Screen("register")
+    object ChildManagement : Screen("child_management")
     object Chat : Screen("chat/{childId}") {
         fun createRoute(childId: Long) = "chat/$childId"
     }
@@ -35,18 +41,30 @@ sealed class Screen(val route: String) {
 @Composable
 fun ThinkFirstNavigation(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.LoginMode.route
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        // Authentication screens
-        composable(Screen.Login.route) {
+        // Login Mode Selection
+        composable(Screen.LoginMode.route) {
+            LoginModeScreen(
+                onParentLoginClick = {
+                    navController.navigate(Screen.ParentLogin.route)
+                },
+                onChildLoginClick = {
+                    navController.navigate(Screen.ChildLogin.route)
+                }
+            )
+        }
+
+        // Parent Login
+        composable(Screen.ParentLogin.route) {
             LoginScreen(
-                onLoginSuccess = { childId ->
-                    navController.navigate(Screen.Chat.createRoute(childId)) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                onLoginSuccess = { _ ->
+                    navController.navigate(Screen.ChildManagement.route) {
+                        popUpTo(Screen.LoginMode.route) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = {
@@ -54,16 +72,45 @@ fun ThinkFirstNavigation(
                 }
             )
         }
-        
+
+        // Child Login
+        composable(Screen.ChildLogin.route) {
+            ChildLoginScreen(
+                onLoginSuccess = { childId ->
+                    navController.navigate(Screen.Chat.createRoute(childId)) {
+                        popUpTo(Screen.LoginMode.route) { inclusive = true }
+                    }
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Register
         composable(Screen.Register.route) {
             RegisterScreen(
-                onRegisterSuccess = { childId ->
-                    navController.navigate(Screen.Chat.createRoute(childId)) {
-                        popUpTo(Screen.Register.route) { inclusive = true }
+                onRegisterSuccess = { _ ->
+                    navController.navigate(Screen.ChildManagement.route) {
+                        popUpTo(Screen.LoginMode.route) { inclusive = true }
                     }
                 },
                 onNavigateToLogin = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        // Child Management (for parents)
+        composable(Screen.ChildManagement.route) {
+            ChildManagementScreen(
+                onChildSelected = { childId ->
+                    navController.navigate(Screen.Dashboard.createRoute(childId))
+                },
+                onLogout = {
+                    navController.navigate(Screen.LoginMode.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
