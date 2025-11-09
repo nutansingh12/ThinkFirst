@@ -15,7 +15,7 @@ public class DatabaseConfig {
 
     @Bean
     @Primary
-    @ConditionalOnExpression("'${DATABASE_URL:}'.length() > 0")
+    @ConditionalOnExpression("'${spring.datasource.url:}'.length() > 0")
     public DataSource dataSource() {
         String databaseUrl = System.getenv("DATABASE_URL");
 
