@@ -24,6 +24,8 @@ public class ChildService {
 
     @Transactional
     public ChildResponse createChild(ChildRequest request) {
+        log.info("Creating child with username: {} for parent ID: {}", request.getUsername(), request.getParentId());
+
         // Check if username already exists
         if (childRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
@@ -31,7 +33,12 @@ public class ChildService {
 
         // Verify parent exists
         User parent = userRepository.findById(request.getParentId())
-                .orElseThrow(() -> new RuntimeException("Parent not found"));
+                .orElseThrow(() -> {
+                    log.error("Parent not found with ID: {}. Available parent IDs: {}",
+                        request.getParentId(),
+                        userRepository.findAll().stream().map(User::getId).toList());
+                    return new RuntimeException("Parent not found with ID: " + request.getParentId());
+                });
 
         // Parse grade level
         Child.GradeLevel gradeLevel = null;
