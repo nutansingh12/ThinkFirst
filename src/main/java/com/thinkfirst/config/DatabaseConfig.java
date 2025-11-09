@@ -1,6 +1,6 @@
 package com.thinkfirst.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,7 @@ public class DatabaseConfig {
 
     @Bean
     @Primary
-    @ConditionalOnExpression("'${spring.datasource.url:}'.length() > 0")
+    @ConditionalOnProperty(name = "DATABASE_URL")
     public DataSource dataSource() {
         String databaseUrl = System.getenv("DATABASE_URL");
 
