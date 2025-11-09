@@ -92,9 +92,10 @@ public class AuthService {
     /**
      * Child login with username/password
      */
+    @Transactional(readOnly = true)
     public AuthResponse childLogin(ChildLoginRequest request) {
         Child child = childRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Child not found"));
+                .orElseThrow(() -> new RuntimeException("Child not found with username: " + request.getUsername()));
 
         if (!passwordEncoder.matches(request.getPassword(), child.getPassword())) {
             throw new RuntimeException("Invalid credentials");

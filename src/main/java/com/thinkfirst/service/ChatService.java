@@ -218,8 +218,8 @@ public class ChatService {
     @Transactional
     public ChatSession createSession(Long childId, String title) {
         Child child = childRepository.findById(childId)
-                .orElseThrow(() -> new RuntimeException("Child not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Child not found with ID: " + childId));
+
         ChatSession session = ChatSession.builder()
                 .child(child)
                 .title(title != null ? title : "New Chat")
