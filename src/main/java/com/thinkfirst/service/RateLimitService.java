@@ -32,8 +32,13 @@ public class RateLimitService {
      * @throws RateLimitException if rate limit exceeded
      */
     public void checkChatRateLimit(Long childId) {
-        String key = "rate_limit:chat:" + childId;
-        checkRateLimit(key, CHAT_REQUESTS_PER_HOUR, Duration.ofHours(1), "Chat requests");
+        try {
+            String key = "rate_limit:chat:" + childId;
+            checkRateLimit(key, CHAT_REQUESTS_PER_HOUR, Duration.ofHours(1), "Chat requests");
+        } catch (Exception e) {
+            log.warn("Chat rate limit check failed (Redis unavailable?): {}", e.getMessage());
+            // Fail open - allow the request if Redis is unavailable
+        }
     }
     
     /**
@@ -52,8 +57,13 @@ public class RateLimitService {
      * @throws RateLimitException if rate limit exceeded
      */
     public void checkAuthRateLimit(String identifier) {
-        String key = "rate_limit:auth:" + identifier;
-        checkRateLimit(key, AUTH_ATTEMPTS_PER_HOUR, Duration.ofHours(1), "Authentication attempts");
+        try {
+            String key = "rate_limit:auth:" + identifier;
+            checkRateLimit(key, AUTH_ATTEMPTS_PER_HOUR, Duration.ofHours(1), "Authentication attempts");
+        } catch (Exception e) {
+            log.warn("Rate limit check failed (Redis unavailable?): {}", e.getMessage());
+            // Fail open - allow the request if Redis is unavailable
+        }
     }
     
     /**
@@ -62,8 +72,13 @@ public class RateLimitService {
      * @throws RateLimitException if daily limit exceeded
      */
     public void checkDailyQuestionLimit(Long childId) {
-        String key = "rate_limit:daily_questions:" + childId;
-        checkRateLimit(key, DAILY_QUESTIONS_LIMIT, Duration.ofDays(1), "Daily questions");
+        try {
+            String key = "rate_limit:daily_questions:" + childId;
+            checkRateLimit(key, DAILY_QUESTIONS_LIMIT, Duration.ofDays(1), "Daily questions");
+        } catch (Exception e) {
+            log.warn("Daily question limit check failed (Redis unavailable?): {}", e.getMessage());
+            // Fail open - allow the request if Redis is unavailable
+        }
     }
     
     /**
