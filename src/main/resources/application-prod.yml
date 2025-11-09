@@ -3,6 +3,12 @@ spring:
     url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
     username: ${PGUSER}
     password: ${PGPASSWORD}
+
+  flyway:
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+    user: ${PGUSER}
+    password: ${PGPASSWORD}
+
   data:
     redis:
       host: ${REDISHOST:localhost}

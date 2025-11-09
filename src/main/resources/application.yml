@@ -7,6 +7,11 @@ spring:
     username: ${PGUSER:thinkfirst}
     password: ${PGPASSWORD:thinkfirst123}
     driver-class-name: org.postgresql.Driver
+
+  flyway:
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:thinkfirst}
+    user: ${PGUSER:thinkfirst}
+    password: ${PGPASSWORD:thinkfirst123}
   
   jpa:
     hibernate:
