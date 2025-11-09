@@ -22,8 +22,8 @@ android {
             useSupportLibrary = true
         }
 
-        // API configuration - Default to local development
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
+        // API configuration - Railway production backend
+        buildConfigField("String", "API_BASE_URL", "\"https://thinkfirst-backend-production.up.railway.app/api/\"")
     }
 
     buildTypes {
@@ -38,8 +38,8 @@ android {
         }
         debug {
             isDebuggable = true
-            // Debug uses local emulator backend
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
+            // Debug also uses Railway production backend
+            buildConfigField("String", "API_BASE_URL", "\"https://thinkfirst-backend-production.up.railway.app/api/\"")
         }
     }
 

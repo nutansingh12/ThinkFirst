@@ -89,7 +89,7 @@ class AuthViewModel @Inject constructor(
                     refreshToken = response.refreshToken ?: "",
                     userId = response.userId,
                     childId = childId,
-                    email = response.email,
+                    email = response.email ?: "",
                     fullName = response.fullName
                 )
 
@@ -139,7 +139,7 @@ class AuthViewModel @Inject constructor(
                     refreshToken = response.refreshToken ?: "",
                     userId = response.userId,
                     childId = childId,
-                    email = response.email,
+                    email = response.email ?: "",
                     fullName = response.fullName
                 )
 
