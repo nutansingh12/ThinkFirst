@@ -1,11 +1,13 @@
 package com.thinkfirst.android.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.thinkfirst.android.presentation.auth.AuthViewModel
 import com.thinkfirst.android.presentation.auth.ChildLoginScreen
 import com.thinkfirst.android.presentation.auth.LoginModeScreen
 import com.thinkfirst.android.presentation.auth.LoginScreen
@@ -103,11 +105,13 @@ fun ThinkFirstNavigation(
 
         // Child Management (for parents)
         composable(Screen.ChildManagement.route) {
+            val authViewModel: AuthViewModel = hiltViewModel()
             ChildManagementScreen(
                 onChildSelected = { childId ->
                     navController.navigate(Screen.Dashboard.createRoute(childId))
                 },
                 onLogout = {
+                    authViewModel.logout()
                     navController.navigate(Screen.LoginMode.route) {
                         popUpTo(0) { inclusive = true }
                     }
