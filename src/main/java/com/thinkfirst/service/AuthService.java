@@ -1,25 +1,32 @@
 package com.thinkfirst.service;
 
 import com.thinkfirst.dto.AuthResponse;
+import com.thinkfirst.dto.ChildLoginRequest;
 import com.thinkfirst.dto.LoginRequest;
 import com.thinkfirst.dto.RegisterRequest;
+import com.thinkfirst.model.Child;
 import com.thinkfirst.model.User;
+import com.thinkfirst.repository.ChildRepository;
 import com.thinkfirst.repository.UserRepository;
 import com.thinkfirst.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    
+
     private final UserRepository userRepository;
+    private final ChildRepository childRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
@@ -79,6 +86,41 @@ public class AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFirstName() + " " + user.getLastName())
                 .role(user.getRole().name())
+                .build();
+    }
+
+    /**
+     * Child login with username/password
+     */
+    public AuthResponse childLogin(ChildLoginRequest request) {
+        Child child = childRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Child not found"));
+
+        if (!passwordEncoder.matches(request.getPassword(), child.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        if (!child.getActive()) {
+            throw new RuntimeException("Child account is inactive");
+        }
+
+        // Create UserDetails for child
+        UserDetails childUserDetails = org.springframework.security.core.userdetails.User.builder()
+                .username("child_" + child.getId()) // Prefix to distinguish from parent users
+                .password(child.getPassword())
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_CHILD")))
+                .build();
+
+        String token = jwtTokenProvider.generateToken(childUserDetails);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(childUserDetails);
+
+        return AuthResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken)
+                .userId(child.getId())
+                .email(null) // Children don't have email
+                .fullName(child.getUsername())
+                .role("CHILD")
                 .build();
     }
 

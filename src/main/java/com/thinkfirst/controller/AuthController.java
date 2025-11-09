@@ -1,6 +1,7 @@
 package com.thinkfirst.controller;
 
 import com.thinkfirst.dto.AuthResponse;
+import com.thinkfirst.dto.ChildLoginRequest;
 import com.thinkfirst.dto.LoginRequest;
 import com.thinkfirst.dto.RefreshTokenRequest;
 import com.thinkfirst.dto.RegisterRequest;
@@ -35,12 +36,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login to get JWT token")
+    @Operation(summary = "Parent/Educator login to get JWT token")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         // Check login rate limit
         rateLimitService.checkAuthRateLimit(request.getUsername());
 
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/child/login")
+    @Operation(summary = "Child login with username/password")
+    public ResponseEntity<AuthResponse> childLogin(@Valid @RequestBody ChildLoginRequest request) {
+        // Check login rate limit
+        rateLimitService.checkAuthRateLimit(request.getUsername());
+
+        return ResponseEntity.ok(authService.childLogin(request));
     }
 
     @PostMapping("/refresh-token")
