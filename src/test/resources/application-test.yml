@@ -1,0 +1,115 @@
+spring:
+  application:
+    name: thinkfirst-backend-test
+  
+  # Use H2 in-memory database for tests
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false  # Disable Flyway for tests
+
+  # Use embedded Redis or mock for tests
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cache:
+    type: simple  # Use simple cache for tests instead of Redis
+
+# AI Provider Configuration for Tests
+ai:
+  provider-priority:
+    - groq
+    - gemini
+    - openai
+
+  # Gemini Configuration
+  gemini:
+    enabled: ${GEMINI_ENABLED:false}
+    api-key: ${GEMINI_API_KEY:}
+    base-url: https://generativelanguage.googleapis.com/v1beta
+    models:
+      default: gemini-1.5-flash
+      advanced: gemini-1.5-pro
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  # Groq Configuration (Free tier - good for testing)
+  groq:
+    enabled: ${GROQ_ENABLED:true}
+    api-key: ${GROQ_API_KEY:}
+    base-url: https://api.groq.com/openai/v1
+    models:
+      default: llama-3.1-8b-instant
+      advanced: llama-3.1-70b-versatile
+      alternative: mixtral-8x7b-32768
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  # OpenAI Configuration
+  openai:
+    enabled: ${OPENAI_ENABLED:false}
+    api-key: ${OPENAI_API_KEY:}
+    base-url: https://api.openai.com/v1
+    models:
+      default: gpt-3.5-turbo
+      advanced: gpt-4
+      turbo: gpt-4-turbo-preview
+      mini: gpt-4o-mini
+    max-tokens: 1000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  resilience:
+    retry:
+      max-attempts: 2  # Fewer retries for tests
+      wait-duration: 500
+    circuit-breaker:
+      failure-rate-threshold: 50
+      wait-duration-in-open-state: 10000
+      sliding-window-size: 5
+
+# JWT Configuration for Tests
+jwt:
+  secret: test-secret-key-for-testing-only
+  expiration: 3600000  # 1 hour
+  refresh-expiration: 7200000  # 2 hours
+
+# Application Configuration
+app:
+  quiz:
+    passing-score: 70
+    default-question-count: 3  # Fewer questions for faster tests
+    verification-question-count: 2
+  
+  learning:
+    max-daily-questions: 50
+    streak-reset-hours: 24
+  
+  content:
+    moderation-enabled: false  # Disable moderation for tests
+
+# Logging
+logging:
+  level:
+    com.thinkfirst: DEBUG
+    org.springframework.web: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+

@@ -125,7 +125,7 @@ public class ChatService {
         
         if (!hasPrerequisite) {
             // Step 3: Generate prerequisite quiz
-            Quiz quiz = quizService.generatePrerequisiteQuiz(child.getId(), subject);
+            Quiz quiz = quizService.generatePrerequisiteQuiz(child.getId(), subject, query);
             
             response = ChatResponse.withQuiz(quiz);
             

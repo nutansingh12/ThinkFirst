@@ -56,7 +56,7 @@ public class QuizService {
      * Generate a prerequisite quiz for a subject
      */
     @Transactional
-    public Quiz generatePrerequisiteQuiz(Long childId, Subject subject) {
+    public Quiz generatePrerequisiteQuiz(Long childId, Subject subject, String query) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Child not found"));
         
@@ -64,7 +64,7 @@ public class QuizService {
 
         // Generate questions using AI provider (with automatic fallback)
         List<Question> questions = aiProviderService.generateQuestions(
-                subject.getName(),
+                query,
                 subject.getName(),
                 defaultQuestionCount,
                 skillLevel.getCurrentLevel().name()
