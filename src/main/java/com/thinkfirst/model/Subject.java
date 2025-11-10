@@ -1,5 +1,6 @@
 package com.thinkfirst.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -37,14 +38,17 @@ public class Subject {
         joinColumns = @JoinColumn(name = "subject_id"),
         inverseJoinColumns = @JoinColumn(name = "prerequisite_id")
     )
+    @JsonIgnore
     private List<Subject> prerequisites = new ArrayList<>();
-    
+
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Quiz> quizzes = new ArrayList<>();
-    
+
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<SkillLevel> skillLevels = new ArrayList<>();
-    
+
     private Boolean active = true;
 
     @Column(nullable = false, updatable = false)
