@@ -8,6 +8,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +22,7 @@ import static org.mockito.Mockito.*;
 /**
  * Comprehensive Debug Test for AIProviderService
  * Run this locally to thoroughly test all AI provider functionality
- * 
+ *
  * This test covers:
  * 1. Provider availability and fallback logic
  * 2. Question generation with proper format
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AIProviderServiceDebugTest {
 
     private static final Logger log = LoggerFactory.getLogger(AIProviderServiceDebugTest.class);
@@ -313,7 +316,7 @@ class AIProviderServiceDebugTest {
         assertThat(questions).isNotNull();
         assertThat(questions).hasSize(3);
         verify(geminiService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString());
-        verify(groqService, never()).generateQuestions(anyString(), anyInt(), anyString(), anyString());
+        verify(groqService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString());
         verify(openAIService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString());
 
         log.info("✅ TEST 8 PASSED: Quiz cache hit prevented AI API call");
@@ -516,7 +519,7 @@ class AIProviderServiceDebugTest {
         // Question 1
         Question q1 = Question.builder()
             .questionText("What is the value of x in the equation 2 + x = 5?")
-            .options(Arrays.asList("1", "2", "3", "4"))
+            .options(Arrays.asList("The value is 1", "The value is 2", "The value is 3", "The value is 4"))
             .correctOptionIndex(2)
             .explanation("2 + 3 = 5, so x = 3")
             .type(Question.QuestionType.MULTIPLE_CHOICE)
@@ -526,7 +529,7 @@ class AIProviderServiceDebugTest {
         // Question 2
         Question q2 = Question.builder()
             .questionText("Which of the following numbers is greater: 7 or 9?")
-            .options(Arrays.asList("7", "9", "They are equal", "Cannot determine"))
+            .options(Arrays.asList("Seven is greater", "Nine is greater", "They are equal", "Cannot determine"))
             .correctOptionIndex(1)
             .explanation("9 is greater than 7")
             .type(Question.QuestionType.MULTIPLE_CHOICE)
@@ -536,7 +539,7 @@ class AIProviderServiceDebugTest {
         // Question 3
         Question q3 = Question.builder()
             .questionText("What is 5 × 3?")
-            .options(Arrays.asList("8", "12", "15", "18"))
+            .options(Arrays.asList("Eight", "Twelve", "Fifteen", "Eighteen"))
             .correctOptionIndex(2)
             .explanation("5 multiplied by 3 equals 15")
             .type(Question.QuestionType.MULTIPLE_CHOICE)
