@@ -76,9 +76,9 @@ public class AIProviderService {
     /**
      * Generate quiz questions with automatic fallback and caching
      */
-    public List<Question> generateQuestions(String query, String subject, int count, String difficulty) {
+    public List<Question> generateQuestions(String query, String subject, int count, String difficulty, Integer age) {
         // Try cache first
-        Optional<List<Question>> cached = cacheService.getCachedQuiz(query, subject, count, difficulty);
+        Optional<List<Question>> cached = cacheService.getCachedQuiz(query, subject, count, difficulty, age);
         if (cached.isPresent()) {
             log.info("Using cached quiz for topic: {} (saved API call)", query);
             return cached.get();
@@ -86,12 +86,12 @@ public class AIProviderService {
 
         // Cache miss - call AI provider
         List<Question> questions = executeWithFallback(
-            provider -> provider.generateQuestions(query, subject, count, difficulty),
+            provider -> provider.generateQuestions(query, subject, count, difficulty, age),
             "generateQuestions"
         );
 
         // Cache the questions
-        cacheService.cacheQuiz(query, subject, count, difficulty, questions);
+        cacheService.cacheQuiz(query, subject, count, difficulty, questions, age);
 
         return questions;
     }

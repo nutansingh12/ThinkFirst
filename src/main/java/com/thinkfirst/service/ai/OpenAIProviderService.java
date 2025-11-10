@@ -90,7 +90,7 @@ public class OpenAIProviderService implements AIProvider {
     }
     
     @Override
-    public List<Question> generateQuestions(String topic, String subject, int count, String difficulty) {
+    public List<Question> generateQuestions(String topic, String subject, int count, String difficulty, Integer age) {
         if (!isAvailable()) {
             throw new AIProviderException("OpenAI", "OpenAI API is not available or not configured");
         }

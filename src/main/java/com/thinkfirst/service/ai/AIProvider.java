@@ -1,7 +1,6 @@
 package com.thinkfirst.service.ai;
 
 import com.thinkfirst.model.Question;
-import com.thinkfirst.model.Quiz;
 
 import java.util.List;
 
@@ -28,7 +27,7 @@ public interface AIProvider {
     /**
      * Generate quiz questions based on a topic
      */
-    List<Question> generateQuestions(String topic, String subject, int count, String difficulty);
+    List<Question> generateQuestions(String topic, String subject, int count, String difficulty, Integer age);
     
     /**
      * Generate a hint for a question

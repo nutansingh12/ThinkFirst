@@ -110,8 +110,8 @@ class AIProviderServiceIntegrationTest {
             "basic algebra", 
             "Mathematics", 
             3, 
-            "BEGINNER"
-        );
+            "BEGINNER",
+                8);
 
         // Assert
         assertThat(questions).isNotNull();

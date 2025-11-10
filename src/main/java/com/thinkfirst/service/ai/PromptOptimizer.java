@@ -33,7 +33,7 @@ public class PromptOptimizer {
 //        );
 //    }
 
-    public String buildQuizPrompt(String query, String subject, int age, String difficulty) {
+    public String buildQuizPrompt(String query, String subject, int count, String difficulty, Integer age) {
         return String.format(
             "You are an expert early childhood educator who understands cognitive development stages for children aged 5–16.\n" +
                     "\n" +
@@ -57,10 +57,11 @@ public class PromptOptimizer {
                     "- Subject: {{subject}}\n" +
                     "- Child's main question: \"{{query}}\"\n" +
                     "- Skill level: {{difficulty}}\n" +
+                    "- Number of questions: {{count}}\n" +
                     "\n" +
                     "Output:\n" +
                     "- A progression of prerequisite questions appropriate for a {{age}}-year-old child leading up to understanding \"{{child_question}}\".\n",
-            age, subject, query, difficulty
+            count, subject, query, difficulty, age
         );
     }
     

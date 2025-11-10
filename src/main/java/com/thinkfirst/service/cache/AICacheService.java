@@ -48,9 +48,9 @@ public class AICacheService {
      * Cache quiz questions
      * Key: topic + subject + count + difficulty
      */
-    public void cacheQuiz(String topic, String subject, int count, String difficulty, List<Question> questions) {
+    public void cacheQuiz(String topic, String subject, int count, String difficulty, List<Question> questions, Integer age) {
         try {
-            String cacheKey = generateQuizCacheKey(topic, subject, count, difficulty);
+            String cacheKey = generateQuizCacheKey(topic, subject, count, difficulty, age);
             String jsonValue = objectMapper.writeValueAsString(questions);
             redisTemplate.opsForValue().set(cacheKey, jsonValue, QUIZ_CACHE_TTL);
             log.info("Cached quiz: {} (TTL: {} days)", cacheKey, QUIZ_CACHE_TTL.toDays());
@@ -62,9 +62,9 @@ public class AICacheService {
     /**
      * Get cached quiz questions
      */
-    public Optional<List<Question>> getCachedQuiz(String topic, String subject, int count, String difficulty) {
+    public Optional<List<Question>> getCachedQuiz(String topic, String subject, int count, String difficulty, Integer age) {
         try {
-            String cacheKey = generateQuizCacheKey(topic, subject, count, difficulty);
+            String cacheKey = generateQuizCacheKey(topic, subject, count, difficulty, age);
             String jsonValue = redisTemplate.opsForValue().get(cacheKey);
             
             if (jsonValue != null) {
@@ -236,8 +236,8 @@ public class AICacheService {
     
     // ==================== Cache Key Generation ====================
     
-    private String generateQuizCacheKey(String topic, String subject, int count, String difficulty) {
-        String normalized = normalizeText(topic) + ":" + normalizeText(subject) + ":" + count + ":" + difficulty.toLowerCase();
+    private String generateQuizCacheKey(String topic, String subject, int count, String difficulty, Integer age) {
+        String normalized = normalizeText(topic) + ":" + normalizeText(subject) + ":" + count + ":" + difficulty.toLowerCase() + ":" + age;
         return QUIZ_PREFIX + hashKey(normalized);
     }
     

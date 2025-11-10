@@ -67,7 +67,7 @@ public class GroqService implements AIProvider {
     }
     
     @Override
-    public List<Question> generateQuestions(String topic, String subject, int count, String difficulty) {
+    public List<Question> generateQuestions(String topic, String subject, int count, String difficulty, Integer age) {
         if (!isAvailable()) {
             throw new AIProviderException("Groq", "Groq API is not available or not configured");
         }

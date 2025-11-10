@@ -69,13 +69,13 @@ public class GeminiService implements AIProvider {
     }
     
     @Override
-    public List<Question> generateQuestions(String topic, String subject, int count, String difficulty) {
+    public List<Question> generateQuestions(String topic, String subject, int count, String difficulty, Integer age) {
         if (!isAvailable()) {
             throw new AIProviderException("Gemini", "Gemini API is not available or not configured");
         }
 
         // Use optimized prompt (60% token reduction)
-        String prompt = promptOptimizer.buildQuizPrompt(topic, subject, count, difficulty);
+        String prompt = promptOptimizer.buildQuizPrompt(topic, subject, count, difficulty, age);
         
         String response = callGeminiAPI(prompt, config.getGemini().getModels().get("default"));
         return parseQuestionsFromJSON(response);

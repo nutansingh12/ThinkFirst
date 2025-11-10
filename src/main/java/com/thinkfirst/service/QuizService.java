@@ -56,7 +56,7 @@ public class QuizService {
      * Generate a prerequisite quiz for a subject
      */
     @Transactional
-    public Quiz generatePrerequisiteQuiz(Long childId, Subject subject, String query) {
+    public Quiz generatePrerequisiteQuiz(Long childId, Integer age, Subject subject, String query) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Child not found"));
         
@@ -67,7 +67,8 @@ public class QuizService {
                 query,
                 subject.getName(),
                 defaultQuestionCount,
-                skillLevel.getCurrentLevel().name()
+                skillLevel.getCurrentLevel().name(),
+                age
         );
         
         Quiz quiz = Quiz.builder()
@@ -106,7 +107,8 @@ public class QuizService {
                 "Verification questions for: " + query,
                 subject.getName(),
                 3,
-                "BEGINNER"
+                child.getSkillLevels().get(0).getCurrentLevel().name(),
+                child.getAge()
         );
         
         Quiz quiz = Quiz.builder()

@@ -205,15 +205,15 @@ class AIProviderServiceDebugTest {
         
         // Arrange
         when(groqService.isAvailable()).thenReturn(true);
-        when(cacheService.getCachedQuiz(anyString(), anyString(), anyInt(), anyString()))
+        when(cacheService.getCachedQuiz(anyString(), anyString(), anyInt(), anyString(), anyInt()))
             .thenReturn(Optional.empty());
-        when(groqService.generateQuestions(anyString(), anyString(), anyInt(), anyString()))
+        when(groqService.generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt()))
             .thenReturn(mockQuestions);
 
         // Act
         List<Question> questions = aiProviderService.generateQuestions(
-            "algebra basics", "Mathematics", 3, "BEGINNER"
-        );
+            "what is algebra?", "Mathematics", 3, "BEGINNER",
+                8);
 
         // Assert
         assertThat(questions).isNotNull();
@@ -239,7 +239,7 @@ class AIProviderServiceDebugTest {
             }
         }
         
-        verify(cacheService, times(1)).cacheQuiz(anyString(), anyString(), anyInt(), anyString(), anyList());
+        verify(cacheService, times(1)).cacheQuiz(anyString(), anyString(), anyInt(), anyString(), anyList(), anyInt());
         log.info("✅ TEST 5 PASSED: Questions generated with proper format");
     }
 
@@ -252,23 +252,23 @@ class AIProviderServiceDebugTest {
         // Arrange
         when(geminiService.isAvailable()).thenReturn(true);
         when(groqService.isAvailable()).thenReturn(true);
-        when(cacheService.getCachedQuiz(anyString(), anyString(), anyInt(), anyString()))
+        when(cacheService.getCachedQuiz(anyString(), anyString(), anyInt(), anyString(), anyInt()))
             .thenReturn(Optional.empty());
-        when(geminiService.generateQuestions(anyString(), anyString(), anyInt(), anyString()))
+        when(geminiService.generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt()))
             .thenThrow(new AIProviderException("Gemini", "Rate limit exceeded"));
-        when(groqService.generateQuestions(anyString(), anyString(), anyInt(), anyString()))
+        when(groqService.generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt()))
             .thenReturn(mockQuestions);
 
         // Act
         List<Question> questions = aiProviderService.generateQuestions(
-            "algebra basics", "Mathematics", 3, "BEGINNER"
-        );
+            "algebra basics", "Mathematics", 3, "BEGINNER",
+                8);
 
         // Assert
         assertThat(questions).isNotNull();
         assertThat(questions).hasSize(3);
-        verify(geminiService, times(1)).generateQuestions(anyString(), anyString(), anyInt(), anyString());
-        verify(groqService, times(1)).generateQuestions(anyString(), anyString(), anyInt(), anyString());
+        verify(geminiService, times(1)).generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt());
+        verify(groqService, times(1)).generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt());
         
         log.info("✅ TEST 6 PASSED: Fallback from Gemini to Groq successful");
     }
@@ -304,20 +304,20 @@ class AIProviderServiceDebugTest {
         log.info("\n>>> TEST 8: Quiz cache hit scenario");
 
         // Arrange
-        when(cacheService.getCachedQuiz(anyString(), anyString(), anyInt(), anyString()))
+        when(cacheService.getCachedQuiz(anyString(), anyString(), anyInt(), anyString(), anyInt()))
             .thenReturn(Optional.of(mockQuestions));
 
         // Act
         List<Question> questions = aiProviderService.generateQuestions(
-            "algebra basics", "Mathematics", 3, "BEGINNER"
-        );
+            "algebra basics", "Mathematics", 3, "BEGINNER",
+                8);
 
         // Assert
         assertThat(questions).isNotNull();
         assertThat(questions).hasSize(3);
-        verify(geminiService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString());
-        verify(groqService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString());
-        verify(openAIService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString());
+        verify(geminiService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt());
+        verify(groqService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt());
+        verify(openAIService, never()).generateQuestions(anyString(), anyString(), anyInt(), anyString(), anyInt());
 
         log.info("✅ TEST 8 PASSED: Quiz cache hit prevented AI API call");
     }
