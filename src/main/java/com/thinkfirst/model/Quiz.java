@@ -44,13 +44,20 @@ public class Quiz {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     private Boolean active = true;
-    
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     public enum DifficultyLevel {
         BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
     }
-    
+
     public enum QuizType {
         PREREQUISITE,    // Must pass before getting full answer
         VERIFICATION,    // After receiving answer to verify understanding
