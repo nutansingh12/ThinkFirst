@@ -9,7 +9,9 @@ import com.thinkfirst.model.Question;
 import com.thinkfirst.model.Question.QuestionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -35,6 +37,7 @@ public class GeminiService implements AIProvider {
         this.promptOptimizer = promptOptimizer;
         this.webClient = webClientBuilder
                 .baseUrl(config.getGemini().getBaseUrl())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
         // Log configuration on startup
@@ -123,7 +126,7 @@ public class GeminiService implements AIProvider {
                     "maxOutputTokens", config.getGemini().getMaxTokens()
                 )
             );
-
+            log.debug("Request body: {}", requestBody);
             String response = webClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .path("/models/{model}:generateContent")
@@ -157,6 +160,7 @@ public class GeminiService implements AIProvider {
             throw e;
         } catch (Exception e) {
             log.error("Error calling Gemini API: {}", e.getMessage(), e);
+            log.error("apiKey: {}", config.getGemini().getApiKey());
             throw new AIProviderException("Gemini", "Failed to call Gemini API: " + e.getMessage(), e);
         }
     }

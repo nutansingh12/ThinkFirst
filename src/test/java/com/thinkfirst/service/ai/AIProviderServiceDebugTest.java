@@ -212,7 +212,7 @@ class AIProviderServiceDebugTest {
 
         // Act
         List<Question> questions = aiProviderService.generateQuestions(
-            "what is algebra?", "Mathematics", 3, "BEGINNER",
+            "what is a moonlight?", "Mathematics", 3, "BEGINNER",
                 8);
 
         // Assert
