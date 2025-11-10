@@ -36,7 +36,14 @@ public class Achievement {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime earnedAt;
-    
+
+    @PrePersist
+    protected void onCreate() {
+        if (earnedAt == null) {
+            earnedAt = LocalDateTime.now();
+        }
+    }
+
     public enum AchievementType {
         SUBJECT_MASTERY,      // Achieved 90%+ in a subject
         STREAK_MILESTONE,     // 7, 14, 30 day streaks

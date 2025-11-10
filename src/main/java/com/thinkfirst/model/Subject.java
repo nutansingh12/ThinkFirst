@@ -49,7 +49,15 @@ public class Subject {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
+
     public enum AgeGroup {
         ELEMENTARY, MIDDLE_SCHOOL, HIGH_SCHOOL, GENERAL
     }

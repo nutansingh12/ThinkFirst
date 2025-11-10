@@ -46,7 +46,14 @@ public class QuizAttempt {
     private LocalDateTime attemptedAt;
     
     private LocalDateTime completedAt;
-    
+
+    @PrePersist
+    protected void onCreate() {
+        if (attemptedAt == null) {
+            attemptedAt = LocalDateTime.now();
+        }
+    }
+
     private String feedbackMessage;
 }
 
