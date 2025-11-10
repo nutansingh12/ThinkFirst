@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thinkfirst.android.data.api.ThinkFirstApi
+import com.thinkfirst.android.data.local.TokenManager
 import com.thinkfirst.android.data.model.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val api: ThinkFirstApi
+    private val api: ThinkFirstApi,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Idle)
@@ -146,6 +148,17 @@ class ChatViewModel @Inject constructor(
     
     fun dismissQuiz() {
         _uiState.value = ChatUiState.Success
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                tokenManager.clearTokens()
+                Log.d("ChatViewModel", "User logged out successfully")
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Error during logout", e)
+            }
+        }
     }
 }
 

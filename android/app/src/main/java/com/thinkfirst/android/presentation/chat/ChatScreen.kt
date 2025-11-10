@@ -43,7 +43,10 @@ fun ChatScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 actions = {
-                    IconButton(onClick = { onLogout?.invoke() }) {
+                    IconButton(onClick = {
+                        viewModel.logout()
+                        onLogout?.invoke()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
                             contentDescription = "Logout"
