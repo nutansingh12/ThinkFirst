@@ -41,8 +41,8 @@ public class QuizAttempt {
     private Map<Long, String> answers = new HashMap<>();
     
     private Integer timeSpentSeconds;
-    
-    @CreatedDate
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime attemptedAt;
     
     private LocalDateTime completedAt;

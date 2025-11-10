@@ -46,8 +46,8 @@ public class Subject {
     private List<SkillLevel> skillLevels = new ArrayList<>();
     
     private Boolean active = true;
-    
-    @CreatedDate
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     public enum AgeGroup {

@@ -33,8 +33,8 @@ public class Achievement {
     private AchievementType type;
     
     private Integer points = 0;
-    
-    @CreatedDate
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime earnedAt;
     
     public enum AchievementType {

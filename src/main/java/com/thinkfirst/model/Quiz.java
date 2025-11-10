@@ -41,8 +41,8 @@ public class Quiz {
     
     private String title;
     private String description;
-    
-    @CreatedDate
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     private Boolean active = true;
