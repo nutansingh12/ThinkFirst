@@ -36,6 +36,12 @@ public class GeminiService implements AIProvider {
         this.webClient = webClientBuilder
                 .baseUrl(config.getGemini().getBaseUrl())
                 .build();
+
+        // Log configuration on startup
+        log.info("Gemini Service initialized - Enabled: {}, API Key present: {}, Base URL: {}",
+                config.getGemini().isEnabled(),
+                config.getGemini().getApiKey() != null && !config.getGemini().getApiKey().isEmpty(),
+                config.getGemini().getBaseUrl());
     }
     
     @Override
@@ -102,6 +108,9 @@ public class GeminiService implements AIProvider {
     
     private String callGeminiAPI(String prompt, String model) {
         try {
+            String apiKey = config.getGemini().getApiKey();
+            log.debug("Calling Gemini API with model: {}, API key length: {}", model, apiKey != null ? apiKey.length() : 0);
+
             // Gemini API request format
             Map<String, Object> requestBody = Map.of(
                 "contents", List.of(
@@ -114,11 +123,11 @@ public class GeminiService implements AIProvider {
                     "maxOutputTokens", config.getGemini().getMaxTokens()
                 )
             );
-            
+
             String response = webClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .path("/models/{model}:generateContent")
-                            .queryParam("key", config.getGemini().getApiKey())
+                            .queryParam("key", apiKey)
                             .build(model))
                     .bodyValue(requestBody)
                     .retrieve()
@@ -127,15 +136,21 @@ public class GeminiService implements AIProvider {
                             return Mono.error(new RateLimitException("Gemini", "Rate limit exceeded"));
                         }
                         return clientResponse.bodyToMono(String.class)
-                                .flatMap(body -> Mono.error(new AIProviderException("Gemini", "Client error: " + body)));
+                                .flatMap(body -> {
+                                    log.error("Gemini API 4xx error: {}", body);
+                                    return Mono.error(new AIProviderException("Gemini", "Client error: " + body));
+                                });
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(new AIProviderException("Gemini", "Server error: " + body))))
+                                    .flatMap(body -> {
+                                        log.error("Gemini API 5xx error: {}", body);
+                                        return Mono.error(new AIProviderException("Gemini", "Server error: " + body));
+                                    }))
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(config.getGemini().getTimeoutSeconds()))
                     .block();
-            
+
             return extractTextFromGeminiResponse(response);
             
         } catch (RateLimitException e) {
