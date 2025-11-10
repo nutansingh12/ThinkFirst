@@ -56,7 +56,7 @@ ai:
 
   # Gemini Configuration (Google - Free 1.5M requests/month)
   gemini:
-    enabled: ${GEMINI_ENABLED:true}
+    enabled: ${GEMINI_ENABLED:false}
     api-key: ${GEMINI_API_KEY:}
     base-url: https://generativelanguage.googleapis.com/v1beta
     models:
