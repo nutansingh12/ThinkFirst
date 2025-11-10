@@ -75,12 +75,12 @@ public class GroqService implements AIProvider {
         String systemPrompt = "You are an educational quiz generator. Generate questions in valid JSON format only.";
         
         String userPrompt = String.format(
-            "Generate %d multiple-choice questions about '%s' in the subject of %s at %s difficulty level. " +
+            "Generate %d multiple-choice questions about '%s' in the subject of %s at %s difficulty level, for the age of %d. " +
             "Return ONLY a valid JSON array with this exact structure (no markdown, no code blocks):\n" +
             "[{\"question\":\"What is 2+2?\",\"options\":[\"3\",\"4\",\"5\",\"6\"],\"correctIndex\":1,\"explanation\":\"2+2 equals 4\"}]\n" +
             "Each question must have 4 different answer options with actual text (not just A,B,C,D). " +
             "Make questions educational and age-appropriate.",
-            count, topic, subject, difficulty
+            count, topic, subject, difficulty, age
         );
         
         String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"));
