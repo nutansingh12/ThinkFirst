@@ -1,6 +1,5 @@
 -- Seed initial subjects
 INSERT INTO subjects (name, description, age_group) VALUES
-('General', 'General knowledge and miscellaneous topics', 'GENERAL'),
 ('Mathematics', 'Numbers, arithmetic, algebra, geometry', 'GENERAL'),
 ('Science', 'Biology, chemistry, physics, earth science', 'GENERAL'),
 ('English', 'Reading, writing, grammar, literature', 'GENERAL'),
