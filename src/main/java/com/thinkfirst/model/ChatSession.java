@@ -1,5 +1,6 @@
 package com.thinkfirst.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +30,7 @@ public class ChatSession {
     private String title;
 
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private List<ChatMessage> messages = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)

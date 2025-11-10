@@ -1,5 +1,6 @@
 package com.thinkfirst.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,18 +36,23 @@ public class Child {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", nullable = false)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private User parent;
 
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private List<SkillLevel> skillLevels = new ArrayList<>();
 
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private List<QuizAttempt> quizAttempts = new ArrayList<>();
 
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private List<ChatSession> chatSessions = new ArrayList<>();
 
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private List<Achievement> achievements = new ArrayList<>();
 
     private Integer currentStreak = 0;

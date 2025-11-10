@@ -1,5 +1,6 @@
 package com.thinkfirst.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,6 +50,7 @@ public class User {
     private Boolean emailVerified = false;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent circular reference in JSON serialization
     private List<Child> children = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
