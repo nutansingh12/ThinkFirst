@@ -1,5 +1,6 @@
 package com.thinkfirst.android.presentation.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thinkfirst.android.data.api.ThinkFirstApi
@@ -29,11 +30,14 @@ class ChatViewModel @Inject constructor(
         currentChildId = childId
         viewModelScope.launch {
             try {
+                Log.d("ChatViewModel", "Creating session for child: $childId")
                 val session = api.createSession(childId, "New Chat")
+                Log.d("ChatViewModel", "Session created: ${session.id}")
                 currentSessionId = session.id
                 loadChatHistory(session.id)
             } catch (e: Exception) {
-                _uiState.value = ChatUiState.Error(e.message ?: "Failed to create session")
+                Log.e("ChatViewModel", "Failed to create session", e)
+                _uiState.value = ChatUiState.Error(e.message ?: "Failed to create session: ${e.javaClass.simpleName}")
             }
         }
     }
@@ -41,11 +45,11 @@ class ChatViewModel @Inject constructor(
     fun sendMessage(message: String) {
         val childId = currentChildId ?: return
         val sessionId = currentSessionId ?: return
-        
+
         viewModelScope.launch {
             try {
                 _uiState.value = ChatUiState.Loading
-                
+
                 // Add user message to UI immediately
                 val userMessage = ChatMessage(
                     id = System.currentTimeMillis(),
@@ -54,15 +58,17 @@ class ChatViewModel @Inject constructor(
                     createdAt = System.currentTimeMillis().toString()
                 )
                 _messages.value = _messages.value + userMessage
-                
+
                 // Send to backend
                 val request = ChatRequest(
                     childId = childId,
                     sessionId = sessionId,
                     query = message
                 )
-                
+
+                Log.d("ChatViewModel", "Sending query: $message")
                 val response = api.sendQuery(request)
+                Log.d("ChatViewModel", "Received response: ${response.responseType}")
                 
                 when (response.responseType) {
                     ResponseType.QUIZ_REQUIRED -> {
@@ -86,7 +92,8 @@ class ChatViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = ChatUiState.Error(e.message ?: "Failed to send message")
+                Log.e("ChatViewModel", "Failed to send message", e)
+                _uiState.value = ChatUiState.Error(e.message ?: "Failed to send message: ${e.javaClass.simpleName}")
             }
         }
     }

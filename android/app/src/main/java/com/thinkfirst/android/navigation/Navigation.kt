@@ -131,6 +131,11 @@ fun ThinkFirstNavigation(
                 childId = childId,
                 onNavigateToDashboard = {
                     navController.navigate(Screen.Dashboard.createRoute(childId))
+                },
+                onLogout = {
+                    navController.navigate(Screen.LoginMode.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

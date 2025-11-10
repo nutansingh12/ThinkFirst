@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,23 +24,32 @@ import com.thinkfirst.android.data.model.MessageRole
 fun ChatScreen(
     childId: Long,
     onNavigateToDashboard: (() -> Unit)? = null,
+    onLogout: (() -> Unit)? = null,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messages by viewModel.messages.collectAsState()
     var messageText by remember { mutableStateOf("") }
-    
+
     LaunchedEffect(childId) {
         viewModel.initializeSession(childId)
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("ThinkFirst Chat") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { onLogout?.invoke() }) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Logout"
+                        )
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -48,6 +58,24 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Error display
+            if (uiState is ChatUiState.Error) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "Error: ${(uiState as ChatUiState.Error).message}",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+
             // Messages list
             LazyColumn(
                 modifier = Modifier
@@ -60,7 +88,7 @@ fun ChatScreen(
                 items(messages) { message ->
                     MessageBubble(message)
                 }
-                
+
                 // Loading indicator
                 if (uiState is ChatUiState.Loading) {
                     item {
@@ -70,7 +98,7 @@ fun ChatScreen(
                     }
                 }
             }
-            
+
             // Input field
             Row(
                 modifier = Modifier
