@@ -27,7 +27,8 @@ public class PromptOptimizer {
     public String buildQuizPrompt(String topic, String subject, int count, String difficulty) {
         return String.format(
             "%d MCQs on '%s' (%s, %s level).\nJSON only:\n" +
-            "[{\"question\":\"...\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"correctIndex\":0,\"explanation\":\"...\"}]",
+            "[{\"question\":\"What is 2+2?\",\"options\":[\"3\",\"4\",\"5\",\"6\"],\"correctIndex\":1,\"explanation\":\"2+2=4\"}]\n" +
+            "4 real answer options each (not A,B,C,D).",
             count, topic, subject, difficulty.toLowerCase()
         );
     }

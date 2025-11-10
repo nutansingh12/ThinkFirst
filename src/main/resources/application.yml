@@ -121,7 +121,7 @@ app:
     streak-reset-hours: 24
   
   content:
-    moderation-enabled: true
+    moderation-enabled: false
     age-groups:
       - name: "Elementary"
         min-age: 6

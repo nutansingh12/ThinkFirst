@@ -77,7 +77,8 @@ public class GroqService implements AIProvider {
         String userPrompt = String.format(
             "Generate %d multiple-choice questions about '%s' in the subject of %s at %s difficulty level. " +
             "Return ONLY a valid JSON array with this exact structure (no markdown, no code blocks):\n" +
-            "[{\"question\":\"text\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"correctIndex\":0,\"explanation\":\"text\"}]\n" +
+            "[{\"question\":\"What is 2+2?\",\"options\":[\"3\",\"4\",\"5\",\"6\"],\"correctIndex\":1,\"explanation\":\"2+2 equals 4\"}]\n" +
+            "Each question must have 4 different answer options with actual text (not just A,B,C,D). " +
             "Make questions educational and age-appropriate.",
             count, topic, subject, difficulty
         );
