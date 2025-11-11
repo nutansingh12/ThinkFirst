@@ -170,8 +170,9 @@ fun ChatScreen(
                     learningPath = state.learningPath,
                     childId = childId,
                     onRetakeQuiz = {
-                        // Dismiss and allow student to ask again
+                        // Send the original query again to retake the quiz
                         viewModel.dismissQuiz()
+                        viewModel.sendMessage(state.learningPath.originalQuery)
                     },
                     onAskDifferentQuestion = {
                         viewModel.dismissQuiz()
