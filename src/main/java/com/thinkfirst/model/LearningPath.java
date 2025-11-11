@@ -33,10 +33,10 @@ public class LearningPath {
     @JsonIgnore
     private Quiz quiz;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String topic;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String originalQuery;
 
     @Column(columnDefinition = "TEXT")
