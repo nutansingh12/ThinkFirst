@@ -331,13 +331,17 @@ fun LearningPathDialog(
 ) {
     var showFullScreen by remember { mutableStateOf(false) }
 
+    // Observe the updated learning path from ViewModel
+    val updatedLearningPath by learningJourneyViewModel.learningPath.collectAsState()
+    val currentLearningPath = updatedLearningPath ?: learningPath
+
     LaunchedEffect(learningPath) {
         learningJourneyViewModel.setLearningPath(learningPath, childId)
     }
 
     if (showFullScreen) {
         LearningJourneyScreen(
-            learningPath = learningPath,
+            learningPath = currentLearningPath,
             onCompleteLesson = { lessonId ->
                 learningJourneyViewModel.completeLesson(lessonId)
             },
@@ -361,14 +365,14 @@ fun LearningPathDialog(
                 ) {
                     // Score
                     Text(
-                        text = "Your Score: ${learningPath.score}% (${learningPath.correctAnswers}/${learningPath.totalQuestions})",
+                        text = "Your Score: ${currentLearningPath.score}% (${currentLearningPath.correctAnswers}/${currentLearningPath.totalQuestions})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
 
                     // Motivational message
                     Text(
-                        text = learningPath.motivationalMessage,
+                        text = currentLearningPath.motivationalMessage,
                         style = MaterialTheme.typography.bodyMedium
                     )
 
@@ -376,12 +380,12 @@ fun LearningPathDialog(
 
                     // Lessons preview
                     Text(
-                        text = "📚 ${learningPath.totalLessons} Lessons to Complete:",
+                        text = "📚 ${currentLearningPath.totalLessons} Lessons to Complete:",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
 
-                    learningPath.lessons.take(3).forEach { lesson ->
+                    currentLearningPath.lessons.take(3).forEach { lesson ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -402,7 +406,7 @@ fun LearningPathDialog(
 
                     // Pro tip
                     Text(
-                        text = "💡 ${learningPath.proTip}",
+                        text = "💡 ${currentLearningPath.proTip}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
