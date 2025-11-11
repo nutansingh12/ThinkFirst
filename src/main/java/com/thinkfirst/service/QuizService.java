@@ -26,6 +26,7 @@ public class QuizService {
     private final ChildRepository childRepository;
     private final SubjectRepository subjectRepository;
     private final SkillLevelRepository skillLevelRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final com.thinkfirst.service.ai.AIProviderService aiProviderService;
     private final AchievementService achievementService;
 
@@ -41,6 +42,7 @@ public class QuizService {
             ChildRepository childRepository,
             SubjectRepository subjectRepository,
             SkillLevelRepository skillLevelRepository,
+            ChatMessageRepository chatMessageRepository,
             com.thinkfirst.service.ai.AIProviderService aiProviderService,
             AchievementService achievementService) {
         this.quizRepository = quizRepository;
@@ -48,6 +50,7 @@ public class QuizService {
         this.childRepository = childRepository;
         this.subjectRepository = subjectRepository;
         this.skillLevelRepository = skillLevelRepository;
+        this.chatMessageRepository = chatMessageRepository;
         this.aiProviderService = aiProviderService;
         this.achievementService = achievementService;
     }
@@ -197,16 +200,26 @@ public class QuizService {
         
         // Check for achievements
         achievementService.checkAndAwardAchievements(child, score, passed);
-        
+
         // Determine response level
         ChatResponse.ResponseType responseLevel = determineResponseLevel(score);
-        
+
+        // Get the answer message if student passed (for verification quizzes)
+        String answerMessage = null;
+        if (passed && quiz.getType() == Quiz.QuizType.VERIFICATION) {
+            // Find the chat message that contains the answer
+            answerMessage = chatMessageRepository.findByAssociatedQuizId(quiz.getId())
+                    .map(ChatMessage::getContent)
+                    .orElse(null);
+        }
+
         return QuizResult.builder()
                 .attemptId(attempt.getId())
                 .score(score)
                 .passed(passed)
                 .responseLevel(responseLevel)
                 .feedbackMessage(attempt.getFeedbackMessage())
+                .answerMessage(answerMessage)
                 .questionResults(questionResults)
                 .totalQuestions(totalQuestions)
                 .correctAnswers(correctAnswers)

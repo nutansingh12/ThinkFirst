@@ -12,12 +12,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuizResult {
-    
+
     private Long attemptId;
     private Integer score;
     private Boolean passed;
     private ChatResponse.ResponseType responseLevel;
     private String feedbackMessage;
+    private String answerMessage;  // The actual answer (only if passed)
     private List<QuestionResult> questionResults;
     private Integer totalQuestions;
     private Integer correctAnswers;

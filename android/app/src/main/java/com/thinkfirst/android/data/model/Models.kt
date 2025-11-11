@@ -185,6 +185,7 @@ data class QuizResult(
     val passed: Boolean,
     val responseLevel: ResponseType = ResponseType.FULL_ANSWER,
     val feedbackMessage: String = "",
+    val answerMessage: String? = null,  // The actual answer (only if passed)
     val questionResults: List<QuestionResult> = emptyList(),
     val totalQuestions: Int,
     val correctAnswers: Int

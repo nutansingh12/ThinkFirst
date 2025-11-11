@@ -140,7 +140,7 @@ public class ChatService {
             chatMessageRepository.save(assistantMessage);
             
         } else {
-            // Step 4: Get full AI response using AI provider
+            // Step 4: Generate AI response (but don't send it yet)
             String aiResponse = aiProviderService.generateEducationalResponse(
                     query, child.getAge(), subject.getName()
             );
@@ -149,18 +149,23 @@ public class ChatService {
             Quiz verificationQuiz = quizService.generateVerificationQuiz(
                     query, aiResponse, child.getId(), subject
             );
-            
-            response = ChatResponse.withAnswerAndQuiz(aiResponse, verificationQuiz);
-            
-            // Save assistant message
+
+            // DON'T send the answer yet - student must pass verification quiz first
+            response = ChatResponse.builder()
+                    .responseType(ChatResponse.ResponseType.QUIZ_REQUIRED)
+                    .quiz(verificationQuiz)
+                    .message("I have an answer for you! But first, let me make sure you're ready to understand it. Please complete this quick quiz.")
+                    .build();
+
+            // Save assistant message with the answer stored but not shown
             ChatMessage assistantMessage = ChatMessage.builder()
                     .chatSession(session)
                     .role(ChatMessage.MessageRole.ASSISTANT)
-                    .content(aiResponse)
+                    .content(aiResponse)  // Store the answer for later
                     .associatedQuiz(verificationQuiz)
-                    .requiresQuizCompletion(false)
+                    .requiresQuizCompletion(true)  // Changed to true - quiz must be completed
                     .build();
-            
+
             ChatMessage savedMessage = chatMessageRepository.save(assistantMessage);
             response.setMessageId(savedMessage.getId());
         }
@@ -185,30 +190,39 @@ public class ChatService {
     public ChatResponse processQuizResult(Long childId, Long quizId, Integer score) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Child not found"));
-        
+
         Quiz quiz = quizService.quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
-        
+
+        // Find the chat message associated with this quiz to get the stored answer
+        ChatMessage messageWithAnswer = chatMessageRepository.findByAssociatedQuizId(quizId)
+                .orElse(null);
+
         ChatResponse response;
-        
+
         if (score >= 70) {
-            // Full answer unlocked
+            // Full answer unlocked - send the stored answer
+            String answer = messageWithAnswer != null ? messageWithAnswer.getContent() :
+                    "Great job! You've unlocked full answers for this topic.";
+
             response = ChatResponse.builder()
                     .responseType(ChatResponse.ResponseType.FULL_ANSWER)
-                    .message("Great job! You've unlocked full answers for this topic. What would you like to know?")
+                    .message(answer)
                     .build();
         } else if (score >= 40) {
-            // Partial hint
-            String hint = "You're making progress! Here's a hint to help you: Think about the key concepts we just covered.";
+            // Partial hint - generate a hint based on the topic
+            String hint = messageWithAnswer != null ?
+                    aiProviderService.generateHint(messageWithAnswer.getContent(), child.getAge()) :
+                    "You're making progress! Here's a hint to help you: Think about the key concepts we just covered.";
             response = ChatResponse.withHint(hint);
         } else {
-            // Guided questions only
+            // Guided questions only - don't reveal the answer
             response = ChatResponse.builder()
                     .responseType(ChatResponse.ResponseType.GUIDED_QUESTIONS)
-                    .message("Let's work through this together. What do you already know about this topic?")
+                    .message("Let's work through this together. Try the quiz again, and I'll help guide you!")
                     .build();
         }
-        
+
         return response;
     }
     

@@ -102,23 +102,28 @@ class ChatViewModel @Inject constructor(
     
     fun submitQuiz(quizId: Long, answers: Map<Long, String>, timeSpent: Int) {
         val childId = currentChildId ?: return
-        
+
         viewModelScope.launch {
             try {
                 _uiState.value = ChatUiState.Loading
-                
+
                 val submission = QuizSubmission(
                     childId = childId,
                     quizId = quizId,
                     answers = answers,
                     timeSpentSeconds = timeSpent
                 )
-                
+
                 val result = api.submitQuiz(submission)
                 _uiState.value = ChatUiState.QuizResult(result)
-                
+
                 // Add feedback message
                 addAssistantMessage(result.feedbackMessage)
+
+                // If student passed and there's an answer, show it
+                if (result.passed && result.answerMessage != null) {
+                    addAssistantMessage(result.answerMessage)
+                }
             } catch (e: Exception) {
                 _uiState.value = ChatUiState.Error(e.message ?: "Failed to submit quiz")
             }

@@ -1,11 +1,14 @@
 package com.thinkfirst.android.presentation.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Send
@@ -14,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.thinkfirst.android.data.model.ChatMessage
@@ -213,21 +217,37 @@ fun QuizDialog(
     onDismiss: () -> Unit
 ) {
     var answers by remember { mutableStateOf<Map<Long, String>>(emptyMap()) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(quiz.title ?: "Quiz") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Text(quiz.description ?: "Complete this quiz to continue")
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 quiz.questions.forEachIndexed { index, question ->
-                    Text("${index + 1}. ${question.questionText}")
-                    
+                    Text(
+                        text = "${index + 1}. ${question.questionText}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     question.options?.forEachIndexed { optIndex, option ->
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    answers = answers + (question.id to optIndex.toString())
+                                }
+                                .padding(vertical = 4.dp)
                         ) {
                             RadioButton(
                                 selected = answers[question.id] == optIndex.toString(),
@@ -235,11 +255,14 @@ fun QuizDialog(
                                     answers = answers + (question.id to optIndex.toString())
                                 }
                             )
-                            Text(option)
+                            Text(
+                                text = option,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         },
