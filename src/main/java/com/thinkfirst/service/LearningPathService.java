@@ -181,7 +181,7 @@ public class LearningPathService {
     }
 
     /**
-     * Parse resources from lesson data
+     * Parse resources from lesson data and generate real URLs
      */
     @SuppressWarnings("unchecked")
     private List<Lesson.LessonResource> parseResources(Object resourcesObj) {
@@ -190,16 +190,59 @@ public class LearningPathService {
         try {
             List<Map<String, String>> resourceMaps = (List<Map<String, String>>) resourcesObj;
             return resourceMaps.stream()
-                    .map(r -> Lesson.LessonResource.builder()
-                            .type(Lesson.LessonResource.ResourceType.valueOf(r.getOrDefault("type", "READING")))
-                            .title(r.get("title"))
-                            .description(r.get("description"))
-                            .url(r.get("url"))
-                            .build())
+                    .map(r -> {
+                        String title = r.get("title");
+                        String type = r.getOrDefault("type", "READING");
+                        String url = generateResourceUrl(type, title);
+
+                        return Lesson.LessonResource.builder()
+                                .type(Lesson.LessonResource.ResourceType.valueOf(type))
+                                .title(title)
+                                .description(r.get("description"))
+                                .url(url)
+                                .build();
+                    })
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Failed to parse resources: {}", e.getMessage());
             return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Generate real, working URLs for educational resources
+     */
+    private String generateResourceUrl(String type, String title) {
+        if (title == null || title.isEmpty()) {
+            return null;
+        }
+
+        // URL-encode the search query
+        String searchQuery = title.replace(" ", "+");
+
+        switch (type) {
+            case "VIDEO":
+                // YouTube search for educational videos
+                return "https://www.youtube.com/results?search_query=" + searchQuery + "+educational+for+kids";
+
+            case "PRACTICE":
+                // Khan Academy search
+                return "https://www.khanacademy.org/search?page_search_query=" + searchQuery;
+
+            case "INTERACTIVE_DEMO":
+                // Google search for interactive demos
+                return "https://www.google.com/search?q=" + searchQuery + "+interactive+demo+for+kids";
+
+            case "READING":
+                // Wikipedia or Simple Wikipedia
+                return "https://simple.wikipedia.org/wiki/Special:Search?search=" + searchQuery;
+
+            case "QUIZ":
+                // Quizlet search
+                return "https://quizlet.com/search?query=" + searchQuery + "&type=sets";
+
+            default:
+                return null;
         }
     }
 

@@ -1,5 +1,7 @@
 package com.thinkfirst.android.presentation.learning
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -319,6 +322,7 @@ fun LessonCard(
 
 @Composable
 fun ResourceChip(resource: LessonResource) {
+    val context = LocalContext.current
     val icon = when (resource.type) {
         "VIDEO" -> "🎥"
         "PRACTICE" -> "✏️"
@@ -329,11 +333,21 @@ fun ResourceChip(resource: LessonResource) {
     }
 
     AssistChip(
-        onClick = { /* TODO: Open resource URL */ },
+        onClick = {
+            resource.url?.let { url ->
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    // Handle error - could show a toast or snackbar
+                }
+            }
+        },
         label = { Text("$icon ${resource.title}") },
         leadingIcon = {
             Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-        }
+        },
+        enabled = resource.url != null
     )
 }
 
