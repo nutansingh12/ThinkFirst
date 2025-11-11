@@ -22,6 +22,7 @@ public class QuizResult {
     private List<QuestionResult> questionResults;
     private Integer totalQuestions;
     private Integer correctAnswers;
+    private LearningPathResponse learningPath;  // Learning path (only if failed with score < 40%)
     
     @Data
     @Builder

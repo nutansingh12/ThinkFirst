@@ -29,6 +29,7 @@ public class QuizService {
     private final ChatMessageRepository chatMessageRepository;
     private final com.thinkfirst.service.ai.AIProviderService aiProviderService;
     private final AchievementService achievementService;
+    private final LearningPathService learningPathService;
 
     @Value("${app.quiz.passing-score}")
     private Integer passingScore;
@@ -44,7 +45,8 @@ public class QuizService {
             SkillLevelRepository skillLevelRepository,
             ChatMessageRepository chatMessageRepository,
             com.thinkfirst.service.ai.AIProviderService aiProviderService,
-            AchievementService achievementService) {
+            AchievementService achievementService,
+            LearningPathService learningPathService) {
         this.quizRepository = quizRepository;
         this.quizAttemptRepository = quizAttemptRepository;
         this.childRepository = childRepository;
@@ -53,6 +55,7 @@ public class QuizService {
         this.chatMessageRepository = chatMessageRepository;
         this.aiProviderService = aiProviderService;
         this.achievementService = achievementService;
+        this.learningPathService = learningPathService;
     }
     
     /**
@@ -245,6 +248,30 @@ public class QuizService {
                     .orElse(null);
         }
 
+        // Generate learning path if student failed badly (score < 40%)
+        com.thinkfirst.dto.LearningPathResponse learningPath = null;
+        if (!passed && score < 40 && quiz.getType() == Quiz.QuizType.VERIFICATION) {
+            try {
+                // Get the original query from the chat message
+                String originalQuery = chatMessageRepository.findByAssociatedQuizId(quiz.getId())
+                        .map(ChatMessage::getContent)
+                        .orElse("this topic");
+
+                learningPath = learningPathService.generateLearningPath(
+                        child.getId(),
+                        quiz,
+                        originalQuery,
+                        score,
+                        totalQuestions,
+                        correctAnswers
+                );
+                log.info("Generated learning path for child {} with {} lessons",
+                        child.getId(), learningPath.getTotalLessons());
+            } catch (Exception e) {
+                log.error("Failed to generate learning path: {}", e.getMessage(), e);
+            }
+        }
+
         return QuizResult.builder()
                 .attemptId(attempt.getId())
                 .score(score)
@@ -255,6 +282,7 @@ public class QuizService {
                 .questionResults(filteredResults)  // Use filtered results
                 .totalQuestions(totalQuestions)
                 .correctAnswers(correctAnswers)
+                .learningPath(learningPath)  // Include learning path if generated
                 .build();
     }
     
