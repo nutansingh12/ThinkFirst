@@ -167,18 +167,41 @@ public class GeminiService implements AIProvider {
     
     private String extractTextFromGeminiResponse(String response) {
         try {
+            log.debug("Gemini raw response: {}", response);
             JsonNode root = objectMapper.readTree(response);
+
+            // Check for error in response
+            if (root.has("error")) {
+                JsonNode error = root.get("error");
+                String errorMessage = error.path("message").asText("Unknown error");
+                int errorCode = error.path("code").asInt(0);
+                log.error("Gemini API error (code {}): {}", errorCode, errorMessage);
+
+                if (errorCode == 429) {
+                    throw new RateLimitException("Gemini", "Rate limit exceeded");
+                }
+                throw new AIProviderException("Gemini", "API error: " + errorMessage);
+            }
+
             JsonNode candidates = root.path("candidates");
             if (candidates.isArray() && candidates.size() > 0) {
                 JsonNode content = candidates.get(0).path("content");
                 JsonNode parts = content.path("parts");
                 if (parts.isArray() && parts.size() > 0) {
-                    return parts.get(0).path("text").asText();
+                    String text = parts.get(0).path("text").asText();
+                    if (text != null && !text.isEmpty()) {
+                        return text;
+                    }
                 }
             }
+
+            log.error("Unexpected Gemini response format. Response: {}", response);
             throw new AIProviderException("Gemini", "Unexpected response format");
+        } catch (AIProviderException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error parsing Gemini response: {}", e.getMessage());
+            log.error("Response was: {}", response);
             throw new AIProviderException("Gemini", "Failed to parse response", e);
         }
     }
