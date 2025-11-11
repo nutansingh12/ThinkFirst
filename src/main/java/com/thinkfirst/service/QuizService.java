@@ -107,7 +107,7 @@ public class QuizService {
                 "Verification questions for: " + query,
                 subject.getName(),
                 3,
-                child.getSkillLevels().get(0).getCurrentLevel().name(),
+                SkillLevel.DifficultyLevel.BEGINNER.name(),
                 child.getAge()
         );
         
