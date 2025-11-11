@@ -220,10 +220,19 @@ public class ChatService {
                     "You're making progress! Here's a hint to help you: Think about the key concepts we just covered.";
             response = ChatResponse.withHint(hint);
         } else {
-            // Guided questions only - don't reveal the answer
+            // Guided questions - generate questions to help student learn
+            String guidedQuestions = messageWithAnswer != null ?
+                    aiProviderService.generateEducationalResponse(
+                            "Generate 2-3 simple guiding questions (without answers) to help a " +
+                            child.getAge() + "-year-old think about: " + messageWithAnswer.getContent(),
+                            child.getAge(),
+                            quiz.getSubject().getName()
+                    ) :
+                    "Let's work through this together. Try the quiz again, and I'll help guide you!";
+
             response = ChatResponse.builder()
                     .responseType(ChatResponse.ResponseType.GUIDED_QUESTIONS)
-                    .message("Let's work through this together. Try the quiz again, and I'll help guide you!")
+                    .message(guidedQuestions)
                     .build();
         }
 

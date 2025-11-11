@@ -102,10 +102,14 @@ public class QuizService {
      */
     @Transactional
     public Quiz generateVerificationQuiz(String query, String answer, Long childId, Subject subject) {
+        long startTime = System.currentTimeMillis();
+        log.info("Starting verification quiz generation for query: {}", query);
+
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Child not found"));
-        
+
         // Generate 2-3 quick verification questions using AI provider
+        long aiStartTime = System.currentTimeMillis();
         List<Question> questions = aiProviderService.generateQuestions(
                 "Verification questions for: " + query,
                 subject.getName(),
@@ -113,6 +117,8 @@ public class QuizService {
                 SkillLevel.DifficultyLevel.BEGINNER.name(),
                 child.getAge()
         );
+        long aiEndTime = System.currentTimeMillis();
+        log.info("AI question generation took {} ms", (aiEndTime - aiStartTime));
         
         Quiz quiz = Quiz.builder()
                 .subject(subject)
@@ -132,8 +138,13 @@ public class QuizService {
             q.setDisplayOrder(i);
         }
         quiz.setQuestions(questions);
-        
-        return quizRepository.save(quiz);
+
+        Quiz savedQuiz = quizRepository.save(quiz);
+
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("Verification quiz generation completed in {} ms (total)", totalTime);
+
+        return savedQuiz;
     }
     
     /**
