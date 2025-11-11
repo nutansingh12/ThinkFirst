@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.thinkfirst.android.data.model.ChatMessage
 import com.thinkfirst.android.data.model.MessageRole
+import com.thinkfirst.android.presentation.learning.LearningJourneyScreen
+import com.thinkfirst.android.presentation.learning.LearningJourneyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,6 +163,19 @@ fun ChatScreen(
                 QuizResultDialog(
                     result = state.result,
                     onDismiss = { viewModel.dismissQuiz() }
+                )
+            }
+            is ChatUiState.LearningPathRequired -> {
+                LearningPathDialog(
+                    learningPath = state.learningPath,
+                    childId = childId,
+                    onRetakeQuiz = {
+                        // Dismiss and allow student to ask again
+                        viewModel.dismissQuiz()
+                    },
+                    onAskDifferentQuestion = {
+                        viewModel.dismissQuiz()
+                    }
                 )
             }
             is ChatUiState.Error -> {
@@ -304,5 +319,106 @@ fun QuizResultDialog(
             }
         }
     )
+}
+
+@Composable
+fun LearningPathDialog(
+    learningPath: com.thinkfirst.android.data.model.LearningPath,
+    childId: Long,
+    onRetakeQuiz: () -> Unit,
+    onAskDifferentQuestion: () -> Unit,
+    learningJourneyViewModel: LearningJourneyViewModel = hiltViewModel()
+) {
+    var showFullScreen by remember { mutableStateOf(false) }
+
+    LaunchedEffect(learningPath) {
+        learningJourneyViewModel.setLearningPath(learningPath, childId)
+    }
+
+    if (showFullScreen) {
+        LearningJourneyScreen(
+            learningPath = learningPath,
+            onCompleteLesson = { lessonId ->
+                learningJourneyViewModel.completeLesson(lessonId)
+            },
+            onRetakeQuiz = onRetakeQuiz,
+            onAskDifferentQuestion = onAskDifferentQuestion,
+            onBack = { showFullScreen = false }
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onAskDifferentQuestion,
+            title = {
+                Text(
+                    text = "🎓 Learning Journey",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Score
+                    Text(
+                        text = "Your Score: ${learningPath.score}% (${learningPath.correctAnswers}/${learningPath.totalQuestions})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    // Motivational message
+                    Text(
+                        text = learningPath.motivationalMessage,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Divider()
+
+                    // Lessons preview
+                    Text(
+                        text = "📚 ${learningPath.totalLessons} Lessons to Complete:",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    learningPath.lessons.take(3).forEach { lesson ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = if (lesson.completed) "✅" else if (lesson.locked) "🔒" else "📖",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = lesson.title,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                    Divider()
+
+                    // Pro tip
+                    Text(
+                        text = "💡 ${learningPath.proTip}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showFullScreen = true }) {
+                    Text("Start Learning")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onAskDifferentQuestion) {
+                    Text("Ask Different Question")
+                }
+            }
+        )
+    }
 }
 

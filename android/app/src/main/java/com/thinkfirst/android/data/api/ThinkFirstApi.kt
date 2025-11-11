@@ -60,8 +60,21 @@ interface ThinkFirstApi {
     // Dashboard
     @GET("dashboard/child/{childId}/progress")
     suspend fun getProgress(@Path("childId") childId: Long): ProgressReport
-    
+
     @GET("dashboard/child/{childId}/achievements")
     suspend fun getAchievements(@Path("childId") childId: Long): List<Achievement>
+
+    // Learning Path
+    @POST("learning-path/lesson/{lessonId}/complete")
+    suspend fun completeLesson(
+        @Path("lessonId") lessonId: Long,
+        @Query("childId") childId: Long
+    ): LearningPath
+
+    @GET("learning-path/{learningPathId}")
+    suspend fun getLearningPath(
+        @Path("learningPathId") learningPathId: Long,
+        @Query("childId") childId: Long
+    ): LearningPath
 }
 

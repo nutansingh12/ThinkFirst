@@ -115,14 +115,20 @@ class ChatViewModel @Inject constructor(
                 )
 
                 val result = api.submitQuiz(submission)
-                _uiState.value = ChatUiState.QuizResult(result)
 
-                // Add feedback message
-                addAssistantMessage(result.feedbackMessage)
+                // Check if there's a learning path (student failed badly)
+                if (result.learningPath != null) {
+                    _uiState.value = ChatUiState.LearningPathRequired(result.learningPath)
+                } else {
+                    _uiState.value = ChatUiState.QuizResult(result)
 
-                // If student passed and there's an answer, show it
-                if (result.passed && result.answerMessage != null) {
-                    addAssistantMessage(result.answerMessage)
+                    // Add feedback message
+                    addAssistantMessage(result.feedbackMessage)
+
+                    // If student passed and there's an answer, show it
+                    if (result.passed && result.answerMessage != null) {
+                        addAssistantMessage(result.answerMessage)
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.value = ChatUiState.Error(e.message ?: "Failed to submit quiz")
@@ -174,6 +180,7 @@ sealed class ChatUiState {
     data class QuizRequired(val quiz: Quiz) : ChatUiState()
     data class VerificationQuiz(val quiz: Quiz) : ChatUiState()
     data class QuizResult(val result: com.thinkfirst.android.data.model.QuizResult) : ChatUiState()
+    data class LearningPathRequired(val learningPath: LearningPath) : ChatUiState()
     data class Error(val message: String) : ChatUiState()
 }
 

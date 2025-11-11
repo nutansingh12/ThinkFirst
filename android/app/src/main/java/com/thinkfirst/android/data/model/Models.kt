@@ -188,7 +188,8 @@ data class QuizResult(
     val answerMessage: String? = null,  // The actual answer (only if passed)
     val questionResults: List<QuestionResult> = emptyList(),
     val totalQuestions: Int,
-    val correctAnswers: Int
+    val correctAnswers: Int,
+    val learningPath: LearningPath? = null  // Learning path (only if failed with score < 40%)
 )
 
 data class QuestionResult(
@@ -258,8 +259,42 @@ enum class AchievementType {
     
     @SerializedName("PERSISTENT_LEARNER")
     PERSISTENT_LEARNER,
-    
+
     @SerializedName("FIRST_STEPS")
     FIRST_STEPS
 }
+
+// Learning Path Models
+data class LearningPath(
+    val id: Long,
+    val topic: String,
+    val originalQuery: String,
+    val score: Int,
+    val totalQuestions: Int,
+    val correctAnswers: Int,
+    val motivationalMessage: String,
+    val lessons: List<Lesson>,
+    val totalLessons: Int,
+    val completedLessons: Int,
+    val progressPercentage: Int,
+    val proTip: String
+)
+
+data class Lesson(
+    val id: Long,
+    val title: String,
+    val description: String,
+    val content: String,
+    val displayOrder: Int,
+    val resources: List<LessonResource>,
+    val completed: Boolean,
+    val locked: Boolean
+)
+
+data class LessonResource(
+    val type: String,
+    val title: String,
+    val url: String?,
+    val description: String?
+)
 
