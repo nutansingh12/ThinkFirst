@@ -122,6 +122,42 @@ public class AICacheService {
     }
     
     /**
+     * Cache subject analysis result
+     * Key: query hash
+     */
+    public void cacheSubjectAnalysis(String query, String subject) {
+        try {
+            String cacheKey = "subject:" + query.hashCode();
+            redisTemplate.opsForValue().set(cacheKey, subject, RESPONSE_CACHE_TTL);
+            log.info("Cached subject analysis: {} -> {}", cacheKey, subject);
+        } catch (Exception e) {
+            log.error("Failed to cache subject analysis: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Get cached subject analysis
+     */
+    public Optional<String> getCachedSubjectAnalysis(String query) {
+        try {
+            String cacheKey = "subject:" + query.hashCode();
+            String subject = redisTemplate.opsForValue().get(cacheKey);
+
+            if (subject != null) {
+                log.info("Cache HIT: Subject analysis for query -> {}", subject);
+                return Optional.of(subject);
+            }
+
+            log.debug("Cache MISS: Subject analysis");
+            return Optional.empty();
+
+        } catch (Exception e) {
+            log.error("Failed to retrieve cached subject analysis: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Cache hint
      * Key: query + subject + age
      */

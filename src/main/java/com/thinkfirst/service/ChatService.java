@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Core service implementing quiz-gated chat logic
@@ -30,6 +31,7 @@ public class ChatService {
     private final QuizService quizService;
     private final ProgressTrackingService progressTrackingService;
     private final ContentModerationService contentModerationService;
+    private final LearningPathService learningPathService;
 
     public ChatService(
             ChatSessionRepository chatSessionRepository,
@@ -40,7 +42,8 @@ public class ChatService {
             com.thinkfirst.service.ai.AIProviderService aiProviderService,
             QuizService quizService,
             ProgressTrackingService progressTrackingService,
-            ContentModerationService contentModerationService) {
+            ContentModerationService contentModerationService,
+            LearningPathService learningPathService) {
         this.chatSessionRepository = chatSessionRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.childRepository = childRepository;
@@ -50,6 +53,7 @@ public class ChatService {
         this.quizService = quizService;
         this.progressTrackingService = progressTrackingService;
         this.contentModerationService = contentModerationService;
+        this.learningPathService = learningPathService;
     }
     
     /**
@@ -106,7 +110,29 @@ public class ChatService {
                 .contentModeration("APPROVED")
                 .build();
         chatMessageRepository.save(userMessage);
-        
+
+        // OPTIMIZATION: Check if there's an active learning path for this exact query
+        // This handles the "Retake Quiz" scenario - reuse the same quiz!
+        Optional<com.thinkfirst.model.LearningPath> existingPath =
+                learningPathService.findActiveLearningPath(query, child.getId());
+
+        if (existingPath.isPresent()) {
+            com.thinkfirst.model.LearningPath learningPath = existingPath.get();
+            Quiz existingQuiz = learningPath.getQuiz();
+
+            log.info("RETAKE QUIZ: Reusing existing quiz {} for query: {}", existingQuiz.getId(), query);
+
+            // Return the SAME quiz - don't generate new questions or reveal answer
+            return ChatResponse.builder()
+                    .responseType(ChatResponse.ResponseType.QUIZ_REQUIRED)
+                    .quiz(existingQuiz)
+                    .message("Let's try this quiz again! You've completed the learning journey - show me what you've learned!")
+                    .build();
+
+            // Don't save a new chat message - we're just retaking the quiz
+            // The answer is already stored in the original ChatMessage
+        }
+
         // Step 1: Analyze query to determine subject using AI provider
         String subjectName = aiProviderService.analyzeQuerySubject(query);
         Subject subject = subjectRepository.findByName(subjectName)

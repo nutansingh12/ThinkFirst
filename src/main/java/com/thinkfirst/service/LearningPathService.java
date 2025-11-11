@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,6 +42,13 @@ public class LearningPathService {
         this.childRepository = childRepository;
         this.aiProviderService = aiProviderService;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Find active learning path by original query and child ID
+     */
+    public Optional<LearningPath> findActiveLearningPath(String originalQuery, Long childId) {
+        return learningPathRepository.findByOriginalQueryAndChildIdAndActiveTrue(originalQuery, childId);
     }
 
     /**

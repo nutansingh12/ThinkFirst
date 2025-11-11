@@ -175,7 +175,9 @@ fun ChatScreen(
                         viewModel.sendMessage(state.learningPath.originalQuery)
                     },
                     onAskDifferentQuestion = {
+                        // Clear the learning path and reset input
                         viewModel.dismissQuiz()
+                        messageText = ""
                     }
                 )
             }
