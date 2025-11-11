@@ -212,7 +212,11 @@ public class ChatService {
         } else if (score >= 40) {
             // Partial hint - generate a hint based on the topic
             String hint = messageWithAnswer != null ?
-                    aiProviderService.generateHint(messageWithAnswer.getContent(), child.getAge()) :
+                    aiProviderService.generateHint(
+                            messageWithAnswer.getContent(),
+                            quiz.getSubject().getName(),
+                            child.getAge()
+                    ) :
                     "You're making progress! Here's a hint to help you: Think about the key concepts we just covered.";
             response = ChatResponse.withHint(hint);
         } else {

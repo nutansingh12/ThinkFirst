@@ -155,11 +155,12 @@ public class QuizService {
         for (Question question : quiz.getQuestions()) {
             String userAnswer = answers.get(question.getId());
             boolean isCorrect = checkAnswer(question, userAnswer);
-            
+
             if (isCorrect) {
                 correctAnswers++;
             }
-            
+
+            // Don't add to results yet - we'll add them after we know if student passed
             questionResults.add(QuizResult.QuestionResult.builder()
                     .questionId(question.getId())
                     .questionText(question.getQuestionText())
@@ -169,11 +170,31 @@ public class QuizService {
                     .explanation(question.getExplanation())
                     .build());
         }
-        
+
         // Calculate score
         int totalQuestions = quiz.getQuestions().size();
         int score = (correctAnswers * 100) / totalQuestions;
         boolean passed = score >= quiz.getPassingScore();
+
+        // Filter question results based on score
+        // Only show correct answers and explanations if student passed
+        List<QuizResult.QuestionResult> filteredResults = new ArrayList<>();
+        if (passed) {
+            // Student passed - show everything
+            filteredResults = questionResults;
+        } else {
+            // Student failed - hide correct answers and explanations
+            for (QuizResult.QuestionResult result : questionResults) {
+                filteredResults.add(QuizResult.QuestionResult.builder()
+                        .questionId(result.getQuestionId())
+                        .questionText(result.getQuestionText())
+                        .userAnswer(result.getUserAnswer())
+                        .correctAnswer(null)  // Hide correct answer
+                        .correct(result.getCorrect())
+                        .explanation(null)  // Hide explanation
+                        .build());
+            }
+        }
         
         // Save attempt
         QuizAttempt attempt = QuizAttempt.builder()
@@ -220,7 +241,7 @@ public class QuizService {
                 .responseLevel(responseLevel)
                 .feedbackMessage(attempt.getFeedbackMessage())
                 .answerMessage(answerMessage)
-                .questionResults(questionResults)
+                .questionResults(filteredResults)  // Use filtered results
                 .totalQuestions(totalQuestions)
                 .correctAnswers(correctAnswers)
                 .build();
