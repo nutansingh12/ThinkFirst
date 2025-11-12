@@ -21,12 +21,19 @@ class ChatViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Idle)
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
-    
+
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
-    
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _loadingMessage = MutableStateFlow<String?>(null)
+    val loadingMessage: StateFlow<String?> = _loadingMessage.asStateFlow()
+
     private var currentSessionId: Long? = null
     private var currentChildId: Long? = null
+    private var lastFailedMessage: String? = null
     
     fun initializeSession(childId: Long) {
         currentChildId = childId
@@ -50,6 +57,8 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                _isLoading.value = true
+                _loadingMessage.value = "Thinking..."
                 _uiState.value = ChatUiState.Loading
 
                 // Add user message to UI immediately
@@ -69,15 +78,23 @@ class ChatViewModel @Inject constructor(
                 )
 
                 Log.d("ChatViewModel", "Sending query: $message")
+                _loadingMessage.value = "Getting your answer..."
                 val response = api.sendQuery(request)
                 Log.d("ChatViewModel", "Received response: ${response.responseType}")
-                
+
+                // Clear last failed message on success
+                lastFailedMessage = null
+
                 when (response.responseType) {
                     ResponseType.QUIZ_REQUIRED -> {
+                        _loadingMessage.value = null
+                        _isLoading.value = false
                         _uiState.value = ChatUiState.QuizRequired(response.quiz!!)
                     }
                     ResponseType.FULL_ANSWER -> {
                         addAssistantMessage(response.message ?: "")
+                        _loadingMessage.value = null
+                        _isLoading.value = false
                         if (response.quiz != null) {
                             _uiState.value = ChatUiState.VerificationQuiz(response.quiz)
                         } else {
@@ -86,17 +103,30 @@ class ChatViewModel @Inject constructor(
                     }
                     ResponseType.PARTIAL_HINT -> {
                         addAssistantMessage(response.hint ?: response.message ?: "")
+                        _loadingMessage.value = null
+                        _isLoading.value = false
                         _uiState.value = ChatUiState.Success
                     }
                     ResponseType.GUIDED_QUESTIONS -> {
                         addAssistantMessage(response.message ?: "")
+                        _loadingMessage.value = null
+                        _isLoading.value = false
                         _uiState.value = ChatUiState.Success
                     }
                 }
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Failed to send message", e)
+                lastFailedMessage = message
+                _loadingMessage.value = null
+                _isLoading.value = false
                 _uiState.value = ChatUiState.Error(e.message ?: "Failed to send message: ${e.javaClass.simpleName}")
             }
+        }
+    }
+
+    fun retryLastMessage() {
+        lastFailedMessage?.let { message ->
+            sendMessage(message)
         }
     }
     
@@ -105,6 +135,8 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                _isLoading.value = true
+                _loadingMessage.value = "Checking your answers..."
                 _uiState.value = ChatUiState.Loading
 
                 val submission = QuizSubmission(
@@ -118,8 +150,15 @@ class ChatViewModel @Inject constructor(
 
                 // Check if there's a learning path (student failed badly)
                 if (result.learningPath != null) {
+                    _loadingMessage.value = "Creating your learning journey..."
+                    // Small delay to show the message
+                    kotlinx.coroutines.delay(500)
+                    _loadingMessage.value = null
+                    _isLoading.value = false
                     _uiState.value = ChatUiState.LearningPathRequired(result.learningPath)
                 } else {
+                    _loadingMessage.value = null
+                    _isLoading.value = false
                     _uiState.value = ChatUiState.QuizResult(result)
 
                     // Add feedback message
@@ -131,6 +170,8 @@ class ChatViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                _loadingMessage.value = null
+                _isLoading.value = false
                 _uiState.value = ChatUiState.Error(e.message ?: "Failed to submit quiz")
             }
         }

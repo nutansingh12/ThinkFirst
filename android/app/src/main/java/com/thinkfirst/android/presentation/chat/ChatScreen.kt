@@ -35,6 +35,8 @@ fun ChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messages by viewModel.messages.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val loadingMessage by viewModel.loadingMessage.collectAsState()
     var messageText by remember { mutableStateOf("") }
 
     LaunchedEffect(childId) {
@@ -67,7 +69,7 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Error display
+            // Error display with retry button
             if (uiState is ChatUiState.Error) {
                 Card(
                     modifier = Modifier
@@ -77,11 +79,32 @@ fun ChatScreen(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
                 ) {
-                    Text(
-                        text = "Error: ${(uiState as ChatUiState.Error).message}",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Error: ${(uiState as ChatUiState.Error).message}",
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { viewModel.retryLastMessage() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("Retry")
+                            }
+                            OutlinedButton(
+                                onClick = { viewModel.dismissQuiz() }
+                            ) {
+                                Text("Dismiss")
+                            }
+                        }
+                    }
                 }
             }
 
@@ -95,15 +118,46 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages) { message ->
-                    MessageBubble(message)
+                    MessageBubble(
+                        message = message,
+                        showRetry = uiState is ChatUiState.Error &&
+                                   message.role == MessageRole.USER &&
+                                   message == messages.lastOrNull { it.role == MessageRole.USER },
+                        onRetry = { viewModel.retryLastMessage() }
+                    )
                 }
 
-                // Loading indicator
-                if (uiState is ChatUiState.Loading) {
+                // Loading indicator with message
+                if (isLoading) {
                     item {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(16.dp)
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                modifier = Modifier.widthIn(max = 280.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text(
+                                        text = loadingMessage ?: "Loading...",
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -119,12 +173,18 @@ fun ChatScreen(
                     value = messageText,
                     onValueChange = { messageText = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Ask a question...") },
-                    maxLines = 3
+                    placeholder = {
+                        Text(
+                            if (isLoading) "Please wait..."
+                            else "Ask a question..."
+                        )
+                    },
+                    maxLines = 3,
+                    enabled = !isLoading
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 IconButton(
                     onClick = {
                         if (messageText.isNotBlank()) {
@@ -132,7 +192,7 @@ fun ChatScreen(
                             messageText = ""
                         }
                     },
-                    enabled = messageText.isNotBlank() && uiState !is ChatUiState.Loading
+                    enabled = messageText.isNotBlank() && !isLoading
                 ) {
                     Icon(Icons.Default.Send, contentDescription = "Send")
                 }
@@ -199,17 +259,38 @@ fun ChatScreen(
 }
 
 @Composable
-fun MessageBubble(message: ChatMessage) {
+fun MessageBubble(
+    message: ChatMessage,
+    showRetry: Boolean = false,
+    onRetry: () -> Unit = {}
+) {
     val isUser = message.role == MessageRole.USER
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Retry button for failed user messages
+        if (showRetry && isUser) {
+            IconButton(
+                onClick = onRetry,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Retry",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+        }
+
         Surface(
             shape = RoundedCornerShape(12.dp),
             color = if (isUser) {
-                MaterialTheme.colorScheme.primary
+                if (showRetry) MaterialTheme.colorScheme.errorContainer
+                else MaterialTheme.colorScheme.primary
             } else {
                 MaterialTheme.colorScheme.secondaryContainer
             },
@@ -219,7 +300,8 @@ fun MessageBubble(message: ChatMessage) {
                 text = message.content,
                 modifier = Modifier.padding(12.dp),
                 color = if (isUser) {
-                    MaterialTheme.colorScheme.onPrimary
+                    if (showRetry) MaterialTheme.colorScheme.onErrorContainer
+                    else MaterialTheme.colorScheme.onPrimary
                 } else {
                     MaterialTheme.colorScheme.onSecondaryContainer
                 }
