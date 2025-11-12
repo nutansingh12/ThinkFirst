@@ -30,6 +30,7 @@ public class QuizService {
     private final com.thinkfirst.service.ai.AIProviderService aiProviderService;
     private final AchievementService achievementService;
     private final LearningPathService learningPathService;
+    private final ProgressTrackingService progressTrackingService;
 
     @Value("${app.quiz.passing-score}")
     private Integer passingScore;
@@ -46,7 +47,8 @@ public class QuizService {
             ChatMessageRepository chatMessageRepository,
             com.thinkfirst.service.ai.AIProviderService aiProviderService,
             AchievementService achievementService,
-            LearningPathService learningPathService) {
+            LearningPathService learningPathService,
+            ProgressTrackingService progressTrackingService) {
         this.quizRepository = quizRepository;
         this.quizAttemptRepository = quizAttemptRepository;
         this.childRepository = childRepository;
@@ -56,6 +58,7 @@ public class QuizService {
         this.aiProviderService = aiProviderService;
         this.achievementService = achievementService;
         this.learningPathService = learningPathService;
+        this.progressTrackingService = progressTrackingService;
     }
     
     /**
@@ -226,13 +229,24 @@ public class QuizService {
         
         // Update skill level
         updateSkillLevel(child, quiz.getSubject(), score, passed);
-        
+
         // Update child stats
         child.setTotalQuizzesCompleted(child.getTotalQuizzesCompleted() + 1);
         child.setTotalQuestionsAnswered(child.getTotalQuestionsAnswered() + totalQuestions);
         child.setLastActiveDate(LocalDateTime.now());
+
+        // Update streak
+        progressTrackingService.updateStreak(child);
+
+        // Update total time spent (convert seconds to minutes for storage)
+        Integer timeSpentMinutes = submission.getTimeSpentSeconds() != null ?
+                (submission.getTimeSpentSeconds() / 60) : 0;
+        child.setTotalTimeSpentMinutes(
+                (child.getTotalTimeSpentMinutes() != null ? child.getTotalTimeSpentMinutes() : 0) + timeSpentMinutes
+        );
+
         childRepository.save(child);
-        
+
         // Check for achievements
         achievementService.checkAndAwardAchievements(child, score, passed);
 

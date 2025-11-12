@@ -132,6 +132,7 @@ public class ProgressTrackingService {
                 .currentStreak(child.getCurrentStreak())
                 .totalQuizzesCompleted(child.getTotalQuizzesCompleted())
                 .totalQuestionsAnswered(child.getTotalQuestionsAnswered())
+                .totalTimeSpentMinutes(child.getTotalTimeSpentMinutes() != null ? child.getTotalTimeSpentMinutes() : 0)
                 .averageScore(averageScore != null ? averageScore : 0.0)
                 .skillLevels(skillLevels)
                 .recentAchievements(recentAchievements)

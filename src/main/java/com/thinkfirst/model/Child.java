@@ -59,6 +59,7 @@ public class Child {
     private LocalDateTime lastActiveDate;
     private Integer totalQuestionsAnswered = 0;
     private Integer totalQuizzesCompleted = 0;
+    private Integer totalTimeSpentMinutes = 0;
 
     private Boolean active = true;
 

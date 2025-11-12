@@ -112,17 +112,17 @@ fun DashboardScreen(
                     ) {
                         StatCard(
                             title = "Quizzes Taken",
-                            value = "${uiState.progress?.totalQuizzesTaken ?: 0}",
+                            value = "${uiState.progress?.totalQuizzesCompleted ?: 0}",
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(
                             title = "Avg Score",
-                            value = "${uiState.progress?.averageScore ?: 0}%",
+                            value = "${String.format("%.0f", uiState.progress?.averageScore ?: 0.0)}%",
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
-                
+
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -130,7 +130,7 @@ fun DashboardScreen(
                     ) {
                         StatCard(
                             title = "Questions Asked",
-                            value = "${uiState.progress?.totalQuestionsAsked ?: 0}",
+                            value = "${uiState.progress?.totalQuestionsAnswered ?: 0}",
                             modifier = Modifier.weight(1f)
                         )
                         StatCard(

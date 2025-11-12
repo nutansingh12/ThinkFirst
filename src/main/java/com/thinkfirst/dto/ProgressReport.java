@@ -21,6 +21,7 @@ public class ProgressReport {
     private Integer currentStreak;
     private Integer totalQuizzesCompleted;
     private Integer totalQuestionsAnswered;
+    private Integer totalTimeSpentMinutes;
     private Double averageScore;
     private List<SkillLevel> skillLevels;
     private List<Achievement> recentAchievements;
