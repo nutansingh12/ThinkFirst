@@ -20,6 +20,10 @@ data class ChildLoginRequest(
     val password: String
 )
 
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
 data class AuthResponse(
     val token: String,
     val refreshToken: String?,

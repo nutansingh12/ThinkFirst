@@ -15,6 +15,9 @@ interface ThinkFirstApi {
     @POST("auth/child/login")
     suspend fun childLogin(@Body request: ChildLoginRequest): AuthResponse
 
+    @POST("auth/refresh-token")
+    suspend fun refreshToken(@Body request: RefreshTokenRequest): AuthResponse
+
     // Child Management
     @POST("children")
     suspend fun createChild(@Body request: CreateChildRequest): ChildProfile

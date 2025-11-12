@@ -127,30 +127,64 @@ public class AuthService {
 
     /**
      * Refresh access token using refresh token
+     * Handles both parent users and children
      */
     public AuthResponse refreshToken(String refreshToken) {
         String username = jwtTokenProvider.extractUsername(refreshToken);
 
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Check if it's a child (username starts with "child_")
+        if (username.startsWith("child_")) {
+            // Extract child ID from username
+            Long childId = Long.parseLong(username.substring(6)); // Remove "child_" prefix
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+            Child child = childRepository.findById(childId)
+                    .orElseThrow(() -> new RuntimeException("Child not found"));
 
-        if (!jwtTokenProvider.isTokenValid(refreshToken, userDetails)) {
-            throw new RuntimeException("Invalid refresh token");
+            // Create UserDetails for child
+            UserDetails childUserDetails = org.springframework.security.core.userdetails.User.builder()
+                    .username("child_" + child.getId())
+                    .password(child.getPassword())
+                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_CHILD")))
+                    .build();
+
+            if (!jwtTokenProvider.isTokenValid(refreshToken, childUserDetails)) {
+                throw new RuntimeException("Invalid refresh token");
+            }
+
+            String newAccessToken = jwtTokenProvider.generateToken(childUserDetails);
+            String newRefreshToken = jwtTokenProvider.generateRefreshToken(childUserDetails);
+
+            return AuthResponse.builder()
+                    .token(newAccessToken)
+                    .refreshToken(newRefreshToken)
+                    .userId(child.getId())
+                    .email(null)
+                    .fullName(child.getUsername())
+                    .role("CHILD")
+                    .build();
+        } else {
+            // Handle parent user
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+
+            if (!jwtTokenProvider.isTokenValid(refreshToken, userDetails)) {
+                throw new RuntimeException("Invalid refresh token");
+            }
+
+            String newAccessToken = jwtTokenProvider.generateToken(userDetails);
+            String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+
+            return AuthResponse.builder()
+                    .token(newAccessToken)
+                    .refreshToken(newRefreshToken)
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .fullName(user.getFirstName() + " " + user.getLastName())
+                    .role(user.getRole().name())
+                    .build();
         }
-
-        String newAccessToken = jwtTokenProvider.generateToken(userDetails);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
-
-        return AuthResponse.builder()
-                .token(newAccessToken)
-                .refreshToken(newRefreshToken)
-                .userId(user.getId())
-                .email(user.getEmail())
-                .fullName(user.getFirstName() + " " + user.getLastName())
-                .role(user.getRole().name())
-                .build();
     }
 }
 
