@@ -236,9 +236,6 @@ public class QuizService {
         // Check for achievements
         achievementService.checkAndAwardAchievements(child, score, passed);
 
-        // Determine response level
-        ChatResponse.ResponseType responseLevel = determineResponseLevel(score);
-
         // Get the answer message if student passed (for verification quizzes)
         String answerMessage = null;
         if (passed && quiz.getType() == Quiz.QuizType.VERIFICATION) {
@@ -274,6 +271,9 @@ public class QuizService {
                 log.error("Failed to generate learning path: {}", e.getMessage(), e);
             }
         }
+
+        // Determine response level
+        ChatResponse.ResponseType responseLevel = determineResponseLevel(score);
 
         return QuizResult.builder()
                 .attemptId(attempt.getId())
