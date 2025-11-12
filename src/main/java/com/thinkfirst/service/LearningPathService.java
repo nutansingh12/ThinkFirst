@@ -46,9 +46,31 @@ public class LearningPathService {
 
     /**
      * Find active learning path by original query and child ID
+     * Returns the most recent one if multiple exist
      */
     public Optional<LearningPath> findActiveLearningPath(String originalQuery, Long childId) {
-        return learningPathRepository.findByOriginalQueryAndChildIdAndActiveTrue(originalQuery, childId);
+        List<LearningPath> paths = learningPathRepository.findByOriginalQueryAndChildIdAndActiveTrueOrderByCreatedAtDesc(originalQuery, childId);
+
+        if (paths.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // Return the most recent learning path
+        LearningPath mostRecent = paths.get(0);
+
+        // If there are multiple active paths (shouldn't happen, but handle it), deactivate the old ones
+        if (paths.size() > 1) {
+            log.warn("Found {} active learning paths for query '{}' and child {}. Deactivating old ones.",
+                    paths.size(), originalQuery, childId);
+
+            for (int i = 1; i < paths.size(); i++) {
+                LearningPath oldPath = paths.get(i);
+                oldPath.setActive(false);
+                learningPathRepository.save(oldPath);
+            }
+        }
+
+        return Optional.of(mostRecent);
     }
 
     /**

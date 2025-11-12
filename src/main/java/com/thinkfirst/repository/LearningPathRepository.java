@@ -4,6 +4,7 @@ import com.thinkfirst.model.LearningPath;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -13,6 +14,7 @@ public interface LearningPathRepository extends JpaRepository<LearningPath, Long
 
     Optional<LearningPath> findByIdAndChildId(Long id, Long childId);
 
-    Optional<LearningPath> findByOriginalQueryAndChildIdAndActiveTrue(String originalQuery, Long childId);
+    // Get all active learning paths for a query, ordered by creation date (newest first)
+    List<LearningPath> findByOriginalQueryAndChildIdAndActiveTrueOrderByCreatedAtDesc(String originalQuery, Long childId);
 }
 
