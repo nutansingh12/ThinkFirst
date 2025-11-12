@@ -252,10 +252,13 @@ public class QuizService {
         com.thinkfirst.dto.LearningPathResponse learningPath = null;
         if (!passed && score < 40 && quiz.getType() == Quiz.QuizType.VERIFICATION) {
             try {
-                // Get the original query from the chat message
-                String originalQuery = chatMessageRepository.findByAssociatedQuizId(quiz.getId())
+                // Get the original USER query (not the AI-generated answer)
+                String originalQuery = chatMessageRepository.findUserMessageBeforeQuiz(quiz.getId())
                         .map(ChatMessage::getContent)
                         .orElse("this topic");
+
+                log.info("Found original user query for quiz {}: {}", quiz.getId(),
+                        originalQuery.length() > 50 ? originalQuery.substring(0, 50) + "..." : originalQuery);
 
                 learningPath = learningPathService.generateLearningPath(
                         child.getId(),
