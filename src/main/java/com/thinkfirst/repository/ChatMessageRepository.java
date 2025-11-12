@@ -15,14 +15,15 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     Optional<ChatMessage> findByAssociatedQuizId(Long quizId);
 
     /**
-     * Find the USER message that came before the ASSISTANT message with the quiz
+     * Find the USER message that came immediately before the ASSISTANT message with the quiz
      * This gets the original question, not the AI-generated answer
+     * Returns a List and we'll take the first one (most recent before quiz)
      */
     @Query("SELECT m FROM ChatMessage m WHERE m.chatSession.id = " +
            "(SELECT am.chatSession.id FROM ChatMessage am WHERE am.associatedQuiz.id = :quizId) " +
            "AND m.role = 'USER' " +
            "AND m.createdAt < (SELECT am.createdAt FROM ChatMessage am WHERE am.associatedQuiz.id = :quizId) " +
            "ORDER BY m.createdAt DESC")
-    Optional<ChatMessage> findUserMessageBeforeQuiz(@Param("quizId") Long quizId);
+    List<ChatMessage> findUserMessagesBeforeQuiz(@Param("quizId") Long quizId);
 }
 

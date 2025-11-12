@@ -250,9 +250,9 @@ public class QuizService {
         if (!passed && score < 40 && quiz.getType() == Quiz.QuizType.VERIFICATION) {
             try {
                 // Get the original USER query (not the AI-generated answer)
-                String originalQuery = chatMessageRepository.findUserMessageBeforeQuiz(quiz.getId())
-                        .map(ChatMessage::getContent)
-                        .orElse("this topic");
+                // Take the first (most recent) USER message before the quiz
+                List<ChatMessage> userMessages = chatMessageRepository.findUserMessagesBeforeQuiz(quiz.getId());
+                String originalQuery = userMessages.isEmpty() ? "this topic" : userMessages.get(0).getContent();
 
                 log.info("Found original user query for quiz {}: {}", quiz.getId(),
                         originalQuery.length() > 50 ? originalQuery.substring(0, 50) + "..." : originalQuery);
