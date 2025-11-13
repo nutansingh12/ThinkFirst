@@ -190,6 +190,7 @@ data class QuizResult(
     val responseLevel: ResponseType = ResponseType.FULL_ANSWER,
     val feedbackMessage: String = "",
     val answerMessage: String? = null,  // The actual answer (only if passed)
+    val hintMessage: String? = null,  // Hint to help student (only if score 40-69%)
     val questionResults: List<QuestionResult> = emptyList(),
     val totalQuestions: Int,
     val correctAnswers: Int,

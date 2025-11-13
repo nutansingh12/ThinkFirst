@@ -396,6 +396,31 @@ fun QuizResultDialog(
                 Text("Correct: ${result.correctAnswers}/${result.totalQuestions}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(result.feedbackMessage)
+
+                // Show hint if available (for scores 40-69%)
+                result.hintMessage?.let { hint ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "💡 Hint",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = hint,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {

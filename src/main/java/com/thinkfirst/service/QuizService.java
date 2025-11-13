@@ -259,6 +259,33 @@ public class QuizService {
                     .orElse(null);
         }
 
+        // Generate hint if student scored 40-69% (for verification quizzes)
+        String hintMessage = null;
+        if (!passed && score >= 40 && score < 70 && quiz.getType() == Quiz.QuizType.VERIFICATION) {
+            try {
+                // Get the original USER query and the AI answer
+                List<ChatMessage> userMessages = chatMessageRepository.findUserMessagesBeforeQuiz(quiz.getId());
+                String originalQuery = userMessages.isEmpty() ? "this topic" : userMessages.get(0).getContent();
+
+                log.info("Generating hint for quiz {} (score: {}%) on query: {}",
+                        quiz.getId(), score,
+                        originalQuery.length() > 50 ? originalQuery.substring(0, 50) + "..." : originalQuery);
+
+                // Generate hint using AI
+                hintMessage = aiProviderService.generateHint(
+                        originalQuery,
+                        quiz.getSubject().getName(),
+                        child.getAge()
+                );
+
+                log.info("Generated hint for child {} (length: {} chars)",
+                        child.getId(), hintMessage != null ? hintMessage.length() : 0);
+            } catch (Exception e) {
+                log.error("Failed to generate hint: {}", e.getMessage(), e);
+                hintMessage = "You're making progress! Review the questions you got wrong and try to understand the concepts better.";
+            }
+        }
+
         // Generate learning path if student failed badly (score < 40%)
         com.thinkfirst.dto.LearningPathResponse learningPath = null;
         if (!passed && score < 40 && quiz.getType() == Quiz.QuizType.VERIFICATION) {
@@ -296,6 +323,7 @@ public class QuizService {
                 .responseLevel(responseLevel)
                 .feedbackMessage(attempt.getFeedbackMessage())
                 .answerMessage(answerMessage)
+                .hintMessage(hintMessage)  // Include hint if generated
                 .questionResults(filteredResults)  // Use filtered results
                 .totalQuestions(totalQuestions)
                 .correctAnswers(correctAnswers)

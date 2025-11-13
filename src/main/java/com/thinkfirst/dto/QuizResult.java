@@ -19,6 +19,7 @@ public class QuizResult {
     private ChatResponse.ResponseType responseLevel;
     private String feedbackMessage;
     private String answerMessage;  // The actual answer (only if passed)
+    private String hintMessage;  // Hint to help student (only if score 40-69%)
     private List<QuestionResult> questionResults;
     private Integer totalQuestions;
     private Integer correctAnswers;
