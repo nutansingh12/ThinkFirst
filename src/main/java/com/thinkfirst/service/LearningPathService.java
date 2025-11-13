@@ -189,37 +189,45 @@ public class LearningPathService {
      */
     private List<Map<String, Object>> generateLessonsWithAI(String query, String subject, int age) {
         // First, extract the underlying concept from the question
-        String concept = extractConceptFromQuery(query, subject, age);
-
-        log.info("Extracted concept from query '{}': {}", query, concept);
+//        String concept = extractConceptFromQuery(query, subject, age);
+//
+//        log.info("Extracted concept from query '{}': {}", query, concept);
+//
+//        String prompt = String.format(
+//                "A %d-year-old student asked: '%s'\n\n" +
+//                "The underlying concept they need to learn is: %s\n\n" +
+//                "Create 3 prerequisite lessons that teach this concept step-by-step.\n\n" +
+//                "Each lesson should have:\n" +
+//                "1. A clear, engaging title about the CONCEPT (not the specific question)\n" +
+//                "2. A brief description (1-2 sentences)\n" +
+//                "3. Detailed educational content (3-5 paragraphs) that:\n" +
+//                "   - Explains the concept clearly with examples\n" +
+//                "   - Uses age-appropriate language\n" +
+//                "   - Includes real-world applications\n" +
+//                "   - Breaks down complex ideas into simple steps\n" +
+//                "   - Shows worked examples similar to the original question\n" +
+//                "4. 2-3 learning resources (videos, practice exercises, readings)\n\n" +
+//                "Return ONLY valid JSON array (no markdown, no code blocks, no extra text):\n" +
+//                "[{\n" +
+//                "  \"title\": \"Lesson Title\",\n" +
+//                "  \"description\": \"Brief description\",\n" +
+//                "  \"content\": \"Detailed multi-paragraph explanation with examples and real-world applications\",\n" +
+//                "  \"resources\": [\n" +
+//                "    {\"type\": \"VIDEO\", \"title\": \"Resource title\", \"description\": \"What they'll learn\"},\n" +
+//                "    {\"type\": \"PRACTICE\", \"title\": \"Practice title\", \"description\": \"What they'll practice\"}\n" +
+//                "  ]\n" +
+//                "}]\n\n" +
+//                "Resource types: VIDEO, PRACTICE, INTERACTIVE_DEMO, READING, QUIZ\n" +
+//                "Make the content educational, engaging, and appropriate for a %d-year-old.",
+//                age, query, concept, age
+//        );
 
         String prompt = String.format(
-                "A %d-year-old student asked: '%s'\n\n" +
-                "The underlying concept they need to learn is: %s\n\n" +
-                "Create 3 prerequisite lessons that teach this concept step-by-step.\n\n" +
-                "Each lesson should have:\n" +
-                "1. A clear, engaging title about the CONCEPT (not the specific question)\n" +
-                "2. A brief description (1-2 sentences)\n" +
-                "3. Detailed educational content (3-5 paragraphs) that:\n" +
-                "   - Explains the concept clearly with examples\n" +
-                "   - Uses age-appropriate language\n" +
-                "   - Includes real-world applications\n" +
-                "   - Breaks down complex ideas into simple steps\n" +
-                "   - Shows worked examples similar to the original question\n" +
-                "4. 2-3 learning resources (videos, practice exercises, readings)\n\n" +
-                "Return ONLY valid JSON array (no markdown, no code blocks, no extra text):\n" +
-                "[{\n" +
-                "  \"title\": \"Lesson Title\",\n" +
-                "  \"description\": \"Brief description\",\n" +
-                "  \"content\": \"Detailed multi-paragraph explanation with examples and real-world applications\",\n" +
-                "  \"resources\": [\n" +
-                "    {\"type\": \"VIDEO\", \"title\": \"Resource title\", \"description\": \"What they'll learn\"},\n" +
-                "    {\"type\": \"PRACTICE\", \"title\": \"Practice title\", \"description\": \"What they'll practice\"}\n" +
-                "  ]\n" +
-                "}]\n\n" +
-                "Resource types: VIDEO, PRACTICE, INTERACTIVE_DEMO, READING, QUIZ\n" +
-                "Make the content educational, engaging, and appropriate for a %d-year-old.",
-                age, query, concept, age
+                "For a %d-year-old who needs to learn about '%s' in %s, create 3 prerequisite lessons. " +
+                        "Return ONLY valid JSON array (no markdown, no code blocks):\n" +
+                        "[{\"title\":\"Lesson Title\",\"description\":\"Brief description\",\"content\":\"Detailed explanation\",\"resources\":[{\"type\":\"VIDEO\",\"title\":\"Resource title\",\"description\":\"What they'll learn\"}]}]\n" +
+                        "Resource types: VIDEO, PRACTICE, INTERACTIVE_DEMO, READING, QUIZ",
+                age, query, subject
         );
 
         try {
