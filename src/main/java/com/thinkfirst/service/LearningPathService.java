@@ -189,24 +189,45 @@ public class LearningPathService {
      */
     private List<Map<String, Object>> generateLessonsWithAI(String query, String subject, int age) {
         String prompt = String.format(
-                "For a %d-year-old who needs to learn about '%s' in %s, create 3 prerequisite lessons. " +
-                "Return ONLY valid JSON array (no markdown, no code blocks):\n" +
-                "[{\"title\":\"Lesson Title\",\"description\":\"Brief description\",\"content\":\"Detailed explanation\",\"resources\":[{\"type\":\"VIDEO\",\"title\":\"Resource title\",\"description\":\"What they'll learn\"}]}]\n" +
-                "Resource types: VIDEO, PRACTICE, INTERACTIVE_DEMO, READING, QUIZ",
-                age, query, subject
+                "For a %d-year-old who needs to learn about '%s' in %s, create 3 prerequisite lessons.\n\n" +
+                "Each lesson should have:\n" +
+                "1. A clear, engaging title\n" +
+                "2. A brief description (1-2 sentences)\n" +
+                "3. Detailed educational content (3-5 paragraphs) that:\n" +
+                "   - Explains the concept clearly with examples\n" +
+                "   - Uses age-appropriate language\n" +
+                "   - Includes real-world applications\n" +
+                "   - Breaks down complex ideas into simple steps\n" +
+                "4. 2-3 learning resources (videos, practice exercises, readings)\n\n" +
+                "Return ONLY valid JSON array (no markdown, no code blocks, no extra text):\n" +
+                "[{\n" +
+                "  \"title\": \"Lesson Title\",\n" +
+                "  \"description\": \"Brief description\",\n" +
+                "  \"content\": \"Detailed multi-paragraph explanation with examples and real-world applications\",\n" +
+                "  \"resources\": [\n" +
+                "    {\"type\": \"VIDEO\", \"title\": \"Resource title\", \"description\": \"What they'll learn\"},\n" +
+                "    {\"type\": \"PRACTICE\", \"title\": \"Practice title\", \"description\": \"What they'll practice\"}\n" +
+                "  ]\n" +
+                "}]\n\n" +
+                "Resource types: VIDEO, PRACTICE, INTERACTIVE_DEMO, READING, QUIZ\n" +
+                "Make the content educational, engaging, and appropriate for a %d-year-old.",
+                age, query, subject, age
         );
 
         try {
             String response = aiProviderService.generateEducationalResponse(prompt, age, subject);
-            
+
             // Clean response (remove markdown code blocks if present)
             response = response.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();
-            
+
+            log.info("AI generated lessons response (first 200 chars): {}",
+                    response.length() > 200 ? response.substring(0, 200) + "..." : response);
+
             return objectMapper.readValue(response, new TypeReference<List<Map<String, Object>>>() {});
         } catch (Exception e) {
-            log.error("Failed to generate lessons with AI: {}", e.getMessage());
+            log.error("Failed to generate lessons with AI: {}", e.getMessage(), e);
             // Return default lessons
-            return getDefaultLessons(query);
+            return getDefaultLessons(query, subject, age);
         }
     }
 
@@ -346,27 +367,108 @@ public class LearningPathService {
     }
 
     /**
-     * Default lessons if AI fails
+     * Default lessons if AI fails - now with actual educational content
      */
-    private List<Map<String, Object>> getDefaultLessons(String query) {
+    private List<Map<String, Object>> getDefaultLessons(String query, String subject, int age) {
+        // Generate basic educational content based on the query
+        String basicContent = String.format(
+                "Welcome to your first lesson! Let's learn about %s.\n\n" +
+                "What is this topic about?\n" +
+                "%s is an important concept in %s. Understanding this will help you answer questions and solve problems related to this topic.\n\n" +
+                "Why is it important?\n" +
+                "Learning about %s helps you understand how things work in the real world. Many scientists, engineers, and everyday people use this knowledge in their daily lives.\n\n" +
+                "Let's break it down:\n" +
+                "Think of this topic as building blocks. Each piece of information you learn is like adding another block to your understanding. " +
+                "By the end of these lessons, you'll have a strong foundation to build upon.\n\n" +
+                "Take your time to read through the content, explore the resources, and don't hesitate to ask questions!",
+                query, query, subject, query
+        );
+
+        String intermediateContent = String.format(
+                "Now that you understand the basics, let's dive deeper into %s.\n\n" +
+                "Key Concepts:\n" +
+                "There are several important ideas you need to know about %s. Each concept builds on what you learned in the previous lesson.\n\n" +
+                "How does it work?\n" +
+                "Think about the steps involved. First, one thing happens, then another, and finally you get the result. " +
+                "Understanding this process is crucial to mastering %s.\n\n" +
+                "Real-world examples:\n" +
+                "You can see %s in action all around you! Look for examples in nature, technology, or everyday situations. " +
+                "When you connect what you're learning to real life, it becomes much easier to remember and understand.\n\n" +
+                "Practice makes perfect:\n" +
+                "The more you work with these concepts, the more comfortable you'll become. Try to explain what you've learned to someone else - " +
+                "teaching is one of the best ways to learn!",
+                query, query, query, query
+        );
+
+        String advancedContent = String.format(
+                "Great job making it this far! Now let's put everything together about %s.\n\n" +
+                "Connecting the dots:\n" +
+                "Remember what you learned in the first two lessons? Now we're going to see how all those pieces fit together to give you " +
+                "a complete understanding of %s.\n\n" +
+                "Problem-solving:\n" +
+                "When you face a question about %s, think about the steps:\n" +
+                "1. What is the question asking?\n" +
+                "2. What do I already know about this topic?\n" +
+                "3. How can I apply what I've learned to find the answer?\n" +
+                "4. Does my answer make sense?\n\n" +
+                "Moving forward:\n" +
+                "After completing these lessons, you'll be ready to tackle more challenging questions about %s. " +
+                "Remember, learning is a journey, and every expert was once a beginner just like you!\n\n" +
+                "Keep practicing, stay curious, and don't be afraid to make mistakes - they're an important part of learning!",
+                query, query, query, query
+        );
+
         return List.of(
                 Map.of(
                         "title", "Understanding the Basics",
-                        "description", "Let's start with the fundamental concepts",
-                        "content", "This lesson covers the basic concepts you need to understand " + query,
-                        "resources", List.of()
+                        "description", "Let's start with the fundamental concepts you need to know",
+                        "content", basicContent,
+                        "resources", List.of(
+                                Map.of(
+                                        "type", "VIDEO",
+                                        "title", "Introduction to " + subject,
+                                        "description", "A beginner-friendly video explanation"
+                                ),
+                                Map.of(
+                                        "type", "READING",
+                                        "title", "Learn more about " + subject,
+                                        "description", "Additional reading material to deepen your understanding"
+                                )
+                        )
                 ),
                 Map.of(
                         "title", "Building Your Knowledge",
-                        "description", "Now let's dive deeper into the topic",
-                        "content", "In this lesson, we'll explore " + query + " in more detail",
-                        "resources", List.of()
+                        "description", "Now let's dive deeper into the topic and explore key concepts",
+                        "content", intermediateContent,
+                        "resources", List.of(
+                                Map.of(
+                                        "type", "PRACTICE",
+                                        "title", "Practice exercises for " + subject,
+                                        "description", "Hands-on practice to reinforce what you've learned"
+                                ),
+                                Map.of(
+                                        "type", "INTERACTIVE_DEMO",
+                                        "title", "Interactive demonstration",
+                                        "description", "See the concepts in action with this interactive tool"
+                                )
+                        )
                 ),
                 Map.of(
                         "title", "Putting It All Together",
-                        "description", "Let's apply what you've learned",
-                        "content", "This final lesson helps you connect all the concepts about " + query,
-                        "resources", List.of()
+                        "description", "Let's apply what you've learned and connect all the concepts",
+                        "content", advancedContent,
+                        "resources", List.of(
+                                Map.of(
+                                        "type", "QUIZ",
+                                        "title", "Test your knowledge",
+                                        "description", "Check your understanding with practice questions"
+                                ),
+                                Map.of(
+                                        "type", "VIDEO",
+                                        "title", "Advanced concepts in " + subject,
+                                        "description", "Take your learning to the next level"
+                                )
+                        )
                 )
         );
     }
