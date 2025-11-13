@@ -68,9 +68,19 @@ public class GeminiService implements AIProvider {
         // Use optimized prompt (67% token reduction)
         String prompt = promptOptimizer.buildEducationalPrompt(query, age, subject);
 
-        return callGeminiAPI(prompt, config.getGemini().getModels().get("default"));
+        return callGeminiAPI(prompt, config.getGemini().getModels().get("default"), null);
     }
-    
+
+    @Override
+    public String generateLearningLessons(String prompt, int age, String subject) {
+        if (!isAvailable()) {
+            throw new AIProviderException("Gemini", "Gemini API is not available or not configured");
+        }
+
+        // Use higher token limit for detailed lessons (8000 tokens)
+        return callGeminiAPI(prompt, config.getGemini().getModels().get("default"), 8000);
+    }
+
     @Override
     public List<Question> generateQuestions(String topic, String subject, int count, String difficulty, Integer age) {
         if (!isAvailable()) {
@@ -79,11 +89,11 @@ public class GeminiService implements AIProvider {
 
         // Use optimized prompt (60% token reduction)
         String prompt = promptOptimizer.buildQuizPrompt(topic, subject, count, difficulty, age);
-        
-        String response = callGeminiAPI(prompt, config.getGemini().getModels().get("default"));
+
+        String response = callGeminiAPI(prompt, config.getGemini().getModels().get("default"), null);
         return parseQuestionsFromJSON(response);
     }
-    
+
     @Override
     public String generateHint(String query, String subject, int age) {
         if (!isAvailable()) {
@@ -93,7 +103,7 @@ public class GeminiService implements AIProvider {
         // Use optimized prompt (70% token reduction)
         String prompt = promptOptimizer.buildHintPrompt(query, age, subject);
 
-        return callGeminiAPI(prompt, config.getGemini().getModels().get("default"));
+        return callGeminiAPI(prompt, config.getGemini().getModels().get("default"), null);
     }
 
     @Override
@@ -105,14 +115,18 @@ public class GeminiService implements AIProvider {
         // Use optimized prompt (75% token reduction)
         String prompt = promptOptimizer.buildSubjectPrompt(query);
 
-        String response = callGeminiAPI(prompt, config.getGemini().getModels().get("default"));
+        String response = callGeminiAPI(prompt, config.getGemini().getModels().get("default"), null);
         return response.trim().split("\\s+")[0]; // Get first word
     }
-    
-    private String callGeminiAPI(String prompt, String model) {
+
+    private String callGeminiAPI(String prompt, String model, Integer maxTokensOverride) {
         try {
+            // Use override if provided, otherwise use config default
+            int maxTokens = maxTokensOverride != null ? maxTokensOverride : config.getGemini().getMaxTokens();
+
             String apiKey = config.getGemini().getApiKey();
-            log.debug("Calling Gemini API with model: {}, API key length: {}", model, apiKey != null ? apiKey.length() : 0);
+            log.debug("Calling Gemini API with model: {}, max_tokens: {}, API key length: {}",
+                    model, maxTokens, apiKey != null ? apiKey.length() : 0);
 
             // Gemini API request format
             Map<String, Object> requestBody = Map.of(
@@ -123,7 +137,7 @@ public class GeminiService implements AIProvider {
                 ),
                 "generationConfig", Map.of(
                     "temperature", config.getGemini().getTemperature(),
-                    "maxOutputTokens", config.getGemini().getMaxTokens()
+                    "maxOutputTokens", maxTokens
                 )
             );
             log.debug("Request body: {}", requestBody);

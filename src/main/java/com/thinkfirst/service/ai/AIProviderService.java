@@ -72,7 +72,17 @@ public class AIProviderService {
 
         return response;
     }
-    
+
+    /**
+     * Generate detailed learning lessons with automatic fallback (no caching - lessons are unique)
+     */
+    public String generateLearningLessons(String prompt, int age, String subject) {
+        return executeWithFallback(
+            provider -> provider.generateLearningLessons(prompt, age, subject),
+            "generateLearningLessons"
+        );
+    }
+
     /**
      * Generate quiz questions with automatic fallback and caching
      */

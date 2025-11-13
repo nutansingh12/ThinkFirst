@@ -223,7 +223,8 @@ public class LearningPathService {
         );
 
         try {
-            String response = aiProviderService.generateEducationalResponse(prompt, age, subject);
+            // Use the new generateLearningLessons method with higher token limit
+            String response = aiProviderService.generateLearningLessons(prompt, age, subject);
 
             // Clean response (remove markdown code blocks if present)
             response = response.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();

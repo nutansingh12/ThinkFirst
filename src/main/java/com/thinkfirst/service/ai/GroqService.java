@@ -54,7 +54,7 @@ public class GroqService implements AIProvider {
         if (!isAvailable()) {
             throw new AIProviderException("Groq", "Groq API is not available or not configured");
         }
-        
+
         String systemPrompt = String.format(
             "You are an educational AI tutor for children aged %d. " +
             "Provide clear, age-appropriate explanations about %s. " +
@@ -62,10 +62,28 @@ public class GroqService implements AIProvider {
             "Keep responses concise (under 200 words).",
             age, subject
         );
-        
-        return callGroqAPI(systemPrompt, query, config.getGroq().getModels().get("default"));
+
+        return callGroqAPI(systemPrompt, query, config.getGroq().getModels().get("default"), null);
     }
-    
+
+    @Override
+    public String generateLearningLessons(String prompt, int age, String subject) {
+        if (!isAvailable()) {
+            throw new AIProviderException("Groq", "Groq API is not available or not configured");
+        }
+
+        String systemPrompt = String.format(
+            "You are an educational AI tutor for children aged %d. " +
+            "Generate detailed, comprehensive learning lessons about %s. " +
+            "Use clear, age-appropriate language with examples and real-world applications. " +
+            "Return ONLY valid JSON - no markdown, no code blocks, no extra text.",
+            age, subject
+        );
+
+        // Use higher token limit for detailed lessons (8000 tokens for 3 detailed lessons)
+        return callGroqAPI(systemPrompt, prompt, config.getGroq().getModels().get("default"), 8000);
+    }
+
     @Override
     public List<Question> generateQuestions(String topic, String subject, int count, String difficulty, Integer age) {
         if (!isAvailable()) {
@@ -83,47 +101,52 @@ public class GroqService implements AIProvider {
             count, topic, subject, difficulty, age
         );
         
-        String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"));
+        String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"), null);
         return parseQuestionsFromJSON(response);
     }
-    
+
     @Override
     public String generateHint(String query, String subject, int age) {
         if (!isAvailable()) {
             throw new AIProviderException("Groq", "Groq API is not available or not configured");
         }
-        
+
         String systemPrompt = "You are a helpful educational assistant that provides hints without giving away answers.";
-        
+
         String userPrompt = String.format(
             "For a %d-year-old learning about %s, provide a helpful hint (not the full answer) for: %s\n" +
             "The hint should guide their thinking without giving away the answer. Keep it under 50 words.",
             age, subject, query
         );
-        
-        return callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"));
+
+        return callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"), null);
     }
-    
+
     @Override
     public String analyzeQuerySubject(String query) {
         if (!isAvailable()) {
             throw new AIProviderException("Groq", "Groq API is not available or not configured");
         }
-        
+
         String systemPrompt = "You are a subject classifier. Return only the subject name, nothing else.";
-        
+
         String userPrompt = String.format(
             "Analyze this question and return ONLY the subject category (one word): %s\n" +
             "Choose from: Mathematics, Science, English, History, Geography, Computer Science, Art, Music, General",
             query
         );
-        
-        String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"));
+
+        String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"), null);
         return response.trim().split("\\s+")[0]; // Get first word
     }
-    
-    private String callGroqAPI(String systemPrompt, String userPrompt, String model) {
+
+    private String callGroqAPI(String systemPrompt, String userPrompt, String model, Integer maxTokensOverride) {
         try {
+            // Use override if provided, otherwise use config default
+            int maxTokens = maxTokensOverride != null ? maxTokensOverride : config.getGroq().getMaxTokens();
+
+            log.debug("Calling Groq API with model: {}, max_tokens: {}", model, maxTokens);
+
             // Groq uses OpenAI-compatible API format
             Map<String, Object> requestBody = Map.of(
                 "model", model,
@@ -132,7 +155,7 @@ public class GroqService implements AIProvider {
                     Map.of("role", "user", "content", userPrompt)
                 ),
                 "temperature", config.getGroq().getTemperature(),
-                "max_tokens", config.getGroq().getMaxTokens()
+                "max_tokens", maxTokens
             );
             
             String response = webClient.post()
