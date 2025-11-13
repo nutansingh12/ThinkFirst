@@ -231,9 +231,18 @@ public class QuizService {
         updateSkillLevel(child, quiz.getSubject(), score, passed);
 
         // Update child stats
-        child.setTotalQuizzesCompleted(child.getTotalQuizzesCompleted() + 1);
-        child.setTotalQuestionsAnswered(child.getTotalQuestionsAnswered() + totalQuestions);
+        // Handle null values for existing children that might not have these fields initialized
+        Integer currentQuizzes = child.getTotalQuizzesCompleted() != null ? child.getTotalQuizzesCompleted() : 0;
+        Integer currentQuestions = child.getTotalQuestionsAnswered() != null ? child.getTotalQuestionsAnswered() : 0;
+        Integer currentTimeMinutes = child.getTotalTimeSpentMinutes() != null ? child.getTotalTimeSpentMinutes() : 0;
+
+        child.setTotalQuizzesCompleted(currentQuizzes + 1);
+        child.setTotalQuestionsAnswered(currentQuestions + totalQuestions);
         child.setLastActiveDate(LocalDateTime.now());
+
+        log.info("Updating child {} stats: quizzes {} -> {}, questions {} -> {}",
+                child.getId(), currentQuizzes, currentQuizzes + 1,
+                currentQuestions, currentQuestions + totalQuestions);
 
         // Update streak
         progressTrackingService.updateStreak(child);
@@ -241,11 +250,13 @@ public class QuizService {
         // Update total time spent (convert seconds to minutes for storage)
         Integer timeSpentMinutes = submission.getTimeSpentSeconds() != null ?
                 (submission.getTimeSpentSeconds() / 60) : 0;
-        child.setTotalTimeSpentMinutes(
-                (child.getTotalTimeSpentMinutes() != null ? child.getTotalTimeSpentMinutes() : 0) + timeSpentMinutes
-        );
+        child.setTotalTimeSpentMinutes(currentTimeMinutes + timeSpentMinutes);
 
-        childRepository.save(child);
+        Child savedChild = childRepository.save(child);
+
+        log.info("Child {} stats after save: quizzes={}, questions={}, timeMinutes={}",
+                savedChild.getId(), savedChild.getTotalQuizzesCompleted(),
+                savedChild.getTotalQuestionsAnswered(), savedChild.getTotalTimeSpentMinutes());
 
         // Check for achievements
         achievementService.checkAndAwardAchievements(child, score, passed);
