@@ -188,16 +188,24 @@ public class LearningPathService {
      * Generate lessons using AI
      */
     private List<Map<String, Object>> generateLessonsWithAI(String query, String subject, int age) {
+        // First, extract the underlying concept from the question
+        String concept = extractConceptFromQuery(query, subject, age);
+
+        log.info("Extracted concept from query '{}': {}", query, concept);
+
         String prompt = String.format(
-                "For a %d-year-old who needs to learn about '%s' in %s, create 3 prerequisite lessons.\n\n" +
+                "A %d-year-old student asked: '%s'\n\n" +
+                "The underlying concept they need to learn is: %s\n\n" +
+                "Create 3 prerequisite lessons that teach this concept step-by-step.\n\n" +
                 "Each lesson should have:\n" +
-                "1. A clear, engaging title\n" +
+                "1. A clear, engaging title about the CONCEPT (not the specific question)\n" +
                 "2. A brief description (1-2 sentences)\n" +
                 "3. Detailed educational content (3-5 paragraphs) that:\n" +
                 "   - Explains the concept clearly with examples\n" +
                 "   - Uses age-appropriate language\n" +
                 "   - Includes real-world applications\n" +
                 "   - Breaks down complex ideas into simple steps\n" +
+                "   - Shows worked examples similar to the original question\n" +
                 "4. 2-3 learning resources (videos, practice exercises, readings)\n\n" +
                 "Return ONLY valid JSON array (no markdown, no code blocks, no extra text):\n" +
                 "[{\n" +
@@ -211,7 +219,7 @@ public class LearningPathService {
                 "}]\n\n" +
                 "Resource types: VIDEO, PRACTICE, INTERACTIVE_DEMO, READING, QUIZ\n" +
                 "Make the content educational, engaging, and appropriate for a %d-year-old.",
-                age, query, subject, age
+                age, query, concept, age
         );
 
         try {
@@ -228,6 +236,38 @@ public class LearningPathService {
             log.error("Failed to generate lessons with AI: {}", e.getMessage(), e);
             // Return default lessons
             return getDefaultLessons(query, subject, age);
+        }
+    }
+
+    /**
+     * Extract the underlying concept from a student's question
+     */
+    private String extractConceptFromQuery(String query, String subject, int age) {
+        String prompt = String.format(
+                "A %d-year-old student in %s asked: '%s'\n\n" +
+                "What is the underlying mathematical/scientific CONCEPT they need to learn to answer this question?\n\n" +
+                "Examples:\n" +
+                "- Question: 'what is 8/9 + 4/7 ?' → Concept: 'Adding fractions with different denominators'\n" +
+                "- Question: 'how do plants make oxygen?' → Concept: 'Photosynthesis'\n" +
+                "- Question: 'what is 15 x 23?' → Concept: 'Multi-digit multiplication'\n\n" +
+                "Return ONLY the concept name (no explanation, no extra text).",
+                age, subject, query
+        );
+
+        try {
+            String concept = aiProviderService.generateEducationalResponse(prompt, age, subject);
+            concept = concept.trim().replaceAll("^[\"']|[\"']$", ""); // Remove quotes if present
+
+            // If the AI returns something too long or includes the original question, use a fallback
+            if (concept.length() > 100 || concept.toLowerCase().contains(query.toLowerCase())) {
+                log.warn("AI returned invalid concept: {}, using query as fallback", concept);
+                return query;
+            }
+
+            return concept;
+        } catch (Exception e) {
+            log.error("Failed to extract concept from query: {}", e.getMessage());
+            return query; // Fallback to original query
         }
     }
 
