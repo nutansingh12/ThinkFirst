@@ -47,6 +47,9 @@ class AIProviderServiceDebugTest {
     private GroqService groqService;
 
     @Mock
+    private DeepSeekService deepSeekService;
+
+    @Mock
     private OpenAIProviderService openAIService;
 
     @Mock
@@ -74,17 +77,19 @@ class AIProviderServiceDebugTest {
         mockSubject = "Mathematics";
 
         // Setup provider priority
-        when(config.getProviderPriority()).thenReturn(Arrays.asList("gemini", "groq", "openai"));
+        when(config.getProviderPriority()).thenReturn(Arrays.asList("gemini", "groq", "deepseek", "openai"));
 
         // Setup provider names
         when(geminiService.getProviderName()).thenReturn("Gemini");
         when(groqService.getProviderName()).thenReturn("Groq");
+        when(deepSeekService.getProviderName()).thenReturn("DeepSeek");
         when(openAIService.getProviderName()).thenReturn("OpenAI");
 
         // Initialize service
         aiProviderService = new AIProviderService(
             geminiService,
             groqService,
+            deepSeekService,
             openAIService,
             config,
             cacheService
