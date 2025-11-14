@@ -25,6 +25,7 @@ fun ChildManagementScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<ChildProfile?>(null) }
+    var addChildError by remember { mutableStateOf<String?>(null) }
     
     Scaffold(
         topBar = {
@@ -98,16 +99,31 @@ fun ChildManagementScreen(
     // Add Child Dialog
     if (showAddDialog) {
         AddChildDialog(
-            onDismiss = { showAddDialog = false },
+            onDismiss = {
+                showAddDialog = false
+                addChildError = null
+            },
             onConfirm = { username, password, age, gradeLevel ->
                 viewModel.createChild(
                     username = username,
                     password = password,
                     age = age,
                     gradeLevel = gradeLevel,
-                    onSuccess = { showAddDialog = false }
+                    onSuccess = {
+                        showAddDialog = false
+                        addChildError = null
+                    },
+                    onError = { error ->
+                        // Keep dialog open and show error
+                        addChildError = if (error.contains("already exists", ignoreCase = true)) {
+                            "This username is already taken. Please choose a different username."
+                        } else {
+                            error
+                        }
+                    }
                 )
-            }
+            },
+            errorMessage = addChildError
         )
     }
     

@@ -16,29 +16,32 @@ import java.util.Optional;
 
 /**
  * Hybrid AI Provider Service that manages multiple AI providers with fallback logic.
- * Priority: Gemini (free) → Groq (free) → OpenAI (paid)
+ * Priority: Gemini (free) → Groq (free) → DeepSeek (cheap) → OpenAI (paid)
  */
 @Service
 public class AIProviderService {
 
     private static final Logger log = LoggerFactory.getLogger(AIProviderService.class);
-    
+
     private final Map<String, AIProvider> providers;
     private final AIProviderConfig config;
     private final GeminiService geminiService;
     private final GroqService groqService;
+    private final DeepSeekService deepSeekService;
     private final OpenAIProviderService openAIService;
     private final AICacheService cacheService;
 
     public AIProviderService(
             GeminiService geminiService,
             GroqService groqService,
+            DeepSeekService deepSeekService,
             OpenAIProviderService openAIService,
             AIProviderConfig config,
             AICacheService cacheService
     ) {
         this.geminiService = geminiService;
         this.groqService = groqService;
+        this.deepSeekService = deepSeekService;
         this.openAIService = openAIService;
         this.config = config;
         this.cacheService = cacheService;
@@ -47,6 +50,7 @@ public class AIProviderService {
         this.providers = new HashMap<>();
         providers.put("gemini", geminiService);
         providers.put("groq", groqService);
+        providers.put("deepseek", deepSeekService);
         providers.put("openai", openAIService);
     }
     

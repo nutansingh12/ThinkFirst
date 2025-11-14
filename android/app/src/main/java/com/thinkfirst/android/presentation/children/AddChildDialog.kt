@@ -17,7 +17,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AddChildDialog(
     onDismiss: () -> Unit,
-    onConfirm: (username: String, password: String, age: Int, gradeLevel: String?) -> Unit
+    onConfirm: (username: String, password: String, age: Int, gradeLevel: String?) -> Unit,
+    errorMessage: String? = null
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -140,6 +141,23 @@ fun AddChildDialog(
                     }
                 }
                 
+                // Error message
+                if (errorMessage != null) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                }
+
                 // Validation hint
                 Text(
                     text = "Username and password are required. Age must be between 5-18.",

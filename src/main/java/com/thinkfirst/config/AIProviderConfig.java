@@ -16,6 +16,7 @@ public class AIProviderConfig {
     private GeminiConfig gemini;
     private GroqConfig groq;
     private OpenAIConfig openai;
+    private DeepSeekConfig deepseek;
     private ResilienceConfig resilience;
     
     @Data
@@ -50,7 +51,18 @@ public class AIProviderConfig {
         private Double temperature;
         private Integer timeoutSeconds;
     }
-    
+
+    @Data
+    public static class DeepSeekConfig {
+        private boolean enabled;
+        private String apiKey;
+        private String baseUrl;
+        private Map<String, String> models;
+        private Integer maxTokens;
+        private Double temperature;
+        private Integer timeoutSeconds;
+    }
+
     @Data
     public static class ResilienceConfig {
         private RetryConfig retry;

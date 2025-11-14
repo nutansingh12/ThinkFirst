@@ -36,6 +36,7 @@ class QuizViewModel @Inject constructor(
         this.quizId = quizId
         this.childId = childId
         this.quizStartTime = System.currentTimeMillis()  // Record start time
+        android.util.Log.d("QuizViewModel", "loadQuiz() called - quizId: $quizId, childId: $childId, quizStartTime: $quizStartTime")
 
         _uiState.value = _uiState.value.copy(
             isLoading = true,
@@ -44,11 +45,13 @@ class QuizViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                android.util.Log.d("QuizViewModel", "Fetching quiz $quizId from API...")
                 // Fetch quiz from API
                 val result = quizRepository.getQuiz(quizId)
 
                 result.fold(
                     onSuccess = { quiz ->
+                        android.util.Log.d("QuizViewModel", "Quiz loaded successfully - ${quiz.questions.size} questions")
                         _uiState.value = QuizUiState(
                             questions = quiz.questions,
                             currentQuestionIndex = 0,
@@ -61,6 +64,7 @@ class QuizViewModel @Inject constructor(
                         quiz.timeLimit?.let { startTimer(it.toLong()) }
                     },
                     onFailure = { error ->
+                        android.util.Log.e("QuizViewModel", "Failed to load quiz: ${error.message}")
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             error = error.message ?: "Failed to load quiz"
@@ -68,6 +72,7 @@ class QuizViewModel @Inject constructor(
                     }
                 )
             } catch (e: Exception) {
+                android.util.Log.e("QuizViewModel", "Exception loading quiz: ${e.message}", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to load quiz"
@@ -144,6 +149,7 @@ class QuizViewModel @Inject constructor(
      * Submit quiz
      */
     fun submitQuiz() {
+        android.util.Log.d("QuizViewModel", "submitQuiz() called - quizStartTime: $quizStartTime")
         _uiState.value = _uiState.value.copy(isLoading = true)
 
         viewModelScope.launch {
@@ -152,8 +158,10 @@ class QuizViewModel @Inject constructor(
                 timerJob?.cancel()
 
                 // Calculate time spent in seconds
-                val timeSpentSeconds = ((System.currentTimeMillis() - quizStartTime) / 1000).toInt()
-                android.util.Log.d("QuizViewModel", "Submitting quiz - timeSpentSeconds: $timeSpentSeconds, quizStartTime: $quizStartTime, currentTime: ${System.currentTimeMillis()}")
+                val currentTime = System.currentTimeMillis()
+                val elapsedMillis = currentTime - quizStartTime
+                val timeSpentSeconds = (elapsedMillis / 1000).toInt()
+                android.util.Log.d("QuizViewModel", "Time calculation - quizStartTime: $quizStartTime, currentTime: $currentTime, elapsedMillis: $elapsedMillis, timeSpentSeconds: $timeSpentSeconds")
 
                 val result = quizRepository.submitQuiz(
                     quizId = quizId,

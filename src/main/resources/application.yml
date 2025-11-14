@@ -52,6 +52,7 @@ ai:
   provider-priority:
     - gemini
     - groq
+    - deepseek
     - openai
 
   # Gemini Configuration (Google - Free 1.5M requests/month)
@@ -75,6 +76,18 @@ ai:
       default: llama-3.1-8b-instant
       advanced: llama-3.1-70b-versatile
       alternative: mixtral-8x7b-32768
+    max-tokens: 3000
+    temperature: 0.7
+    timeout-seconds: 30
+
+  # DeepSeek Configuration (Very cheap - $0.28/1M input, $0.42/1M output)
+  deepseek:
+    enabled: ${DEEPSEEK_ENABLED:false}
+    api-key: ${DEEPSEEK_API_KEY:}
+    base-url: https://api.deepseek.com/v1
+    models:
+      default: deepseek-chat
+      reasoning: deepseek-reasoner
     max-tokens: 3000
     temperature: 0.7
     timeout-seconds: 30
