@@ -133,15 +133,18 @@ public class ChatService {
             // The answer is already stored in the original ChatMessage
         }
 
-        // Step 1: Analyze query to determine subject using AI provider
-        String subjectName = aiProviderService.analyzeQuerySubject(query);
-        Subject subject = subjectRepository.findByName(subjectName)
-                .orElse(subjectRepository.findByName("General")
-                        .orElseThrow(() -> new RuntimeException("Default subject not found")));
-        
-        // Update session subject if not set
-        if (session.getSubject() == null) {
+        // Step 1: Determine subject - use session subject if available, otherwise use General
+        // OPTIMIZATION: Skip AI subject analysis - we'll let the quiz/answer generation infer subject from query
+        Subject subject;
+        if (session.getSubject() != null) {
+            subject = session.getSubject();
+            log.info("Using existing session subject: {}", subject.getName());
+        } else {
+            // Default to General subject - the AI will handle subject-specific content based on the query
+            subject = subjectRepository.findByName("General")
+                    .orElseThrow(() -> new RuntimeException("Default subject not found"));
             session.setSubject(subject);
+            log.info("Using General subject for new session");
         }
         
         // Step 2: Check if child has prerequisite knowledge
