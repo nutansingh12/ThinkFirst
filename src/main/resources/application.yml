@@ -61,8 +61,8 @@ ai:
     api-key: ${GEMINI_API_KEY:}
     base-url: https://generativelanguage.googleapis.com/v1beta
     models:
-      default: gemini-2.5-flash
-      advanced: gemini-2.5-pro
+      default: gemini-2.0-flash-exp  # Upgraded from 1.5 - faster and smarter
+      advanced: gemini-2.0-flash-thinking-exp  # For complex reasoning
     max-tokens: 3000
     temperature: 0.7
     timeout-seconds: 30
@@ -98,8 +98,8 @@ ai:
     api-key: ${OPENAI_API_KEY:}
     base-url: https://api.openai.com/v1
     models:
-      default: gpt-3.5-turbo
-      advanced: gpt-4
+      default: gpt-4o-mini  # Upgraded: cheaper ($0.15/1M) AND smarter than gpt-3.5
+      advanced: gpt-4o  # Latest GPT-4 - faster and better
       turbo: gpt-4-turbo-preview
       mini: gpt-4o-mini
     max-tokens: 3000
