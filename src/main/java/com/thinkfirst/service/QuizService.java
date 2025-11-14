@@ -266,8 +266,11 @@ public class QuizService {
         progressTrackingService.updateStreak(child);
 
         // Update total time spent (convert seconds to minutes for storage)
+        log.info("Time tracking - submission.timeSpentSeconds: {}", submission.getTimeSpentSeconds());
         Integer timeSpentMinutes = submission.getTimeSpentSeconds() != null ?
                 (submission.getTimeSpentSeconds() / 60) : 0;
+        log.info("Time tracking - calculated timeSpentMinutes: {}, currentTimeMinutes: {}",
+                timeSpentMinutes, currentTimeMinutes);
         child.setTotalTimeSpentMinutes(currentTimeMinutes + timeSpentMinutes);
 
         Child savedChild = childRepository.save(child);
