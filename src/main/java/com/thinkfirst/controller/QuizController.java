@@ -36,8 +36,7 @@ public class QuizController {
     @GetMapping("/{quizId}")
     @Operation(summary = "Get quiz by ID")
     public ResponseEntity<Quiz> getQuiz(@PathVariable Long quizId) {
-        Quiz quiz = quizService.quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+        Quiz quiz = quizService.getQuizById(quizId);
         return ResponseEntity.ok(quiz);
     }
 }

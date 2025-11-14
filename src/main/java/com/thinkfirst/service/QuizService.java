@@ -62,6 +62,14 @@ public class QuizService {
     }
     
     /**
+     * Get a quiz by ID
+     */
+    public Quiz getQuizById(Long quizId) {
+        return quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found with ID: " + quizId));
+    }
+
+    /**
      * Generate a prerequisite quiz for a subject
      */
     @Transactional
