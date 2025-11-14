@@ -168,6 +168,11 @@ class ChatViewModel @Inject constructor(
                     if (result.passed && result.answerMessage != null) {
                         addAssistantMessage(result.answerMessage)
                     }
+
+                    // If student scored 40-69% and there's a hint, add it to chat
+                    if (!result.passed && result.hintMessage != null) {
+                        addAssistantMessage("💡 Hint: ${result.hintMessage}")
+                    }
                 }
             } catch (e: Exception) {
                 _loadingMessage.value = null
