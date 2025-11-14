@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChildResponse {
-    
+
     private Long id;
     private String username;
     private Integer age;
@@ -21,6 +21,7 @@ public class ChildResponse {
     private Integer currentStreak;
     private Integer totalQuestionsAnswered;
     private Integer totalQuizzesCompleted;
+    private Integer totalTimeSpentMinutes;
     private LocalDateTime lastActiveDate;
     private Boolean active;
     private LocalDateTime createdAt;

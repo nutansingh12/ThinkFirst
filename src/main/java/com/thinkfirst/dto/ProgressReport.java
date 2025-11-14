@@ -1,7 +1,6 @@
 package com.thinkfirst.dto;
 
 import com.thinkfirst.model.Achievement;
-import com.thinkfirst.model.SkillLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +14,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProgressReport {
-    
+
     private Long childId;
     private String childUsername;
     private Integer currentStreak;
@@ -23,10 +22,9 @@ public class ProgressReport {
     private Integer totalQuestionsAnswered;
     private Integer totalTimeSpentMinutes;
     private Double averageScore;
-    private List<SkillLevel> skillLevels;
     private List<Achievement> recentAchievements;
     private Map<String, SubjectProgress> subjectProgress;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
