@@ -29,12 +29,17 @@ public class Quiz {
     @JoinColumn(name = "subject_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Subject subject;
-    
+
     @Enumerated(EnumType.STRING)
     private DifficultyLevel difficulty;
-    
+
     @Enumerated(EnumType.STRING)
     private QuizType type; // PREREQUISITE, VERIFICATION, CHALLENGE
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "original_quiz_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Quiz originalQuiz; // For retake quizzes, reference to the original quiz
     
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();

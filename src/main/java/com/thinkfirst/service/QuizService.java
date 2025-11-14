@@ -272,10 +272,17 @@ public class QuizService {
         // Get the answer message if student passed (for verification quizzes)
         String answerMessage = null;
         if (passed && quiz.getType() == Quiz.QuizType.VERIFICATION) {
+            // For retake quizzes, get the answer from the original quiz
+            Quiz quizToGetAnswerFrom = quiz.getOriginalQuiz() != null ? quiz.getOriginalQuiz() : quiz;
+
             // Find the chat message that contains the answer
-            answerMessage = chatMessageRepository.findByAssociatedQuizId(quiz.getId())
+            answerMessage = chatMessageRepository.findByAssociatedQuizId(quizToGetAnswerFrom.getId())
                     .map(ChatMessage::getContent)
                     .orElse(null);
+
+            log.info("Student passed quiz {} (original: {}), retrieving answer message (length: {} chars)",
+                    quiz.getId(), quizToGetAnswerFrom.getId(),
+                    answerMessage != null ? answerMessage.length() : 0);
         }
 
         // Generate hint and retake quiz if student scored 40-69% (for verification quizzes)
@@ -322,11 +329,15 @@ public class QuizService {
 
                 // Create a retake quiz with only the incorrect questions
                 if (!incorrectQuestionObjects.isEmpty()) {
+                    // Find the original quiz (in case this is already a retake)
+                    Quiz originalQuiz = quiz.getOriginalQuiz() != null ? quiz.getOriginalQuiz() : quiz;
+
                     Quiz retakeQuiz = Quiz.builder()
                             .subject(quiz.getSubject())
                             .difficulty(quiz.getDifficulty())
                             .passingScore(quiz.getPassingScore())
                             .type(Quiz.QuizType.VERIFICATION)
+                            .originalQuiz(originalQuiz)  // Link back to original quiz
                             .build();
 
                     retakeQuiz = quizRepository.save(retakeQuiz);
