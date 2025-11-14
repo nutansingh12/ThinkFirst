@@ -207,6 +207,26 @@ class ChatViewModel @Inject constructor(
         _uiState.value = ChatUiState.Success
     }
 
+    fun loadQuiz(quizId: Long) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _loadingMessage.value = "Loading quiz..."
+
+                val quiz = api.getQuiz(quizId)
+
+                _loadingMessage.value = null
+                _isLoading.value = false
+                _uiState.value = ChatUiState.VerificationQuiz(quiz)
+            } catch (e: Exception) {
+                Log.e("ChatViewModel", "Failed to load quiz", e)
+                _loadingMessage.value = null
+                _isLoading.value = false
+                _uiState.value = ChatUiState.Error(e.message ?: "Failed to load quiz")
+            }
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             try {

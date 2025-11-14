@@ -222,7 +222,11 @@ fun ChatScreen(
             is ChatUiState.QuizResult -> {
                 QuizResultDialog(
                     result = state.result,
-                    onDismiss = { viewModel.dismissQuiz() }
+                    onDismiss = { viewModel.dismissQuiz() },
+                    onRetakeIncorrect = { quizId ->
+                        viewModel.dismissQuiz()
+                        viewModel.loadQuiz(quizId)
+                    }
                 )
             }
             is ChatUiState.LearningPathRequired -> {
@@ -385,7 +389,8 @@ fun QuizDialog(
 @Composable
 fun QuizResultDialog(
     result: com.thinkfirst.android.data.model.QuizResult,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onRetakeIncorrect: (Long) -> Unit = {}
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -424,8 +429,23 @@ fun QuizResultDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Continue")
+            // Show "Try Again" button if retake quiz is available
+            result.retakeQuizId?.let { retakeId ->
+                Button(onClick = { onRetakeIncorrect(retakeId) }) {
+                    Text("Try Again")
+                }
+            } ?: run {
+                TextButton(onClick = onDismiss) {
+                    Text("Continue")
+                }
+            }
+        },
+        dismissButton = {
+            // Show "Continue" as dismiss button when retake is available
+            result.retakeQuizId?.let {
+                TextButton(onClick = onDismiss) {
+                    Text("Continue")
+                }
             }
         }
     )

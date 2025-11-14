@@ -194,7 +194,8 @@ data class QuizResult(
     val questionResults: List<QuestionResult> = emptyList(),
     val totalQuestions: Int,
     val correctAnswers: Int,
-    val learningPath: LearningPath? = null  // Learning path (only if failed with score < 40%)
+    val learningPath: LearningPath? = null,  // Learning path (only if failed with score < 40%)
+    val retakeQuizId: Long? = null  // ID of retake quiz with only incorrect questions (for scores 40-69%)
 )
 
 data class QuestionResult(

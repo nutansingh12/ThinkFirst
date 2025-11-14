@@ -24,6 +24,7 @@ public class QuizResult {
     private Integer totalQuestions;
     private Integer correctAnswers;
     private LearningPathResponse learningPath;  // Learning path (only if failed with score < 40%)
+    private Long retakeQuizId;  // ID of retake quiz with only incorrect questions (for scores 40-69%)
     
     @Data
     @Builder

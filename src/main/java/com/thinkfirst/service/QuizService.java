@@ -270,29 +270,85 @@ public class QuizService {
                     .orElse(null);
         }
 
-        // Generate hint if student scored 40-69% (for verification quizzes)
+        // Generate hint and retake quiz if student scored 40-69% (for verification quizzes)
         String hintMessage = null;
+        Long retakeQuizId = null;
         if (!passed && score >= 40 && score < 70 && quiz.getType() == Quiz.QuizType.VERIFICATION) {
             try {
-                // Get the original USER query and the AI answer
-                List<ChatMessage> userMessages = chatMessageRepository.findUserMessagesBeforeQuiz(quiz.getId());
-                String originalQuery = userMessages.isEmpty() ? "this topic" : userMessages.get(0).getContent();
+                // Collect the questions that were answered incorrectly
+                List<String> incorrectQuestions = new ArrayList<>();
+                List<Question> incorrectQuestionObjects = new ArrayList<>();
+                for (QuizResult.QuestionResult result : questionResults) {
+                    if (!result.getCorrect()) {
+                        incorrectQuestions.add(result.getQuestionText());
+                        // Find the original question object
+                        for (Question q : quiz.getQuestions()) {
+                            if (q.getId().equals(result.getQuestionId())) {
+                                incorrectQuestionObjects.add(q);
+                                break;
+                            }
+                        }
+                    }
+                }
 
-                log.info("Generating hint for quiz {} (score: {}%) on query: {}",
-                        quiz.getId(), score,
-                        originalQuery.length() > 50 ? originalQuery.substring(0, 50) + "..." : originalQuery);
+                log.info("Generating hint for quiz {} (score: {}%) - {} incorrect questions",
+                        quiz.getId(), score, incorrectQuestions.size());
 
-                // Generate hint using AI
+                // Build a prompt that focuses on the incorrect questions
+                StringBuilder hintPrompt = new StringBuilder();
+                hintPrompt.append("The student answered these questions incorrectly:\n");
+                for (int i = 0; i < incorrectQuestions.size(); i++) {
+                    hintPrompt.append((i + 1)).append(". ").append(incorrectQuestions.get(i)).append("\n");
+                }
+                hintPrompt.append("\nProvide a helpful hint that guides them toward understanding these concepts without giving away the answers directly.");
+
+                // Generate hint using AI focused on incorrect questions
                 hintMessage = aiProviderService.generateHint(
-                        originalQuery,
+                        hintPrompt.toString(),
                         quiz.getSubject().getName(),
                         child.getAge()
                 );
 
-                log.info("Generated hint for child {} (length: {} chars)",
-                        child.getId(), hintMessage != null ? hintMessage.length() : 0);
+                log.info("Generated hint for child {} focusing on {} incorrect questions (length: {} chars)",
+                        child.getId(), incorrectQuestions.size(), hintMessage != null ? hintMessage.length() : 0);
+
+                // Create a retake quiz with only the incorrect questions
+                if (!incorrectQuestionObjects.isEmpty()) {
+                    Quiz retakeQuiz = Quiz.builder()
+                            .subject(quiz.getSubject())
+                            .difficulty(quiz.getDifficulty())
+                            .passingScore(quiz.getPassingScore())
+                            .type(Quiz.QuizType.VERIFICATION)
+                            .build();
+
+                    retakeQuiz = quizRepository.save(retakeQuiz);
+
+                    // Clone the incorrect questions for the retake quiz
+                    List<Question> retakeQuestions = new ArrayList<>();
+                    for (int i = 0; i < incorrectQuestionObjects.size(); i++) {
+                        Question original = incorrectQuestionObjects.get(i);
+                        Question cloned = Question.builder()
+                                .quiz(retakeQuiz)
+                                .questionText(original.getQuestionText())
+                                .type(original.getType())
+                                .correctAnswer(original.getCorrectAnswer())
+                                .correctOptionIndex(original.getCorrectOptionIndex())
+                                .options(new ArrayList<>(original.getOptions()))
+                                .explanation(original.getExplanation())
+                                .displayOrder(i)
+                                .build();
+                        retakeQuestions.add(cloned);
+                    }
+
+                    retakeQuiz.setQuestions(retakeQuestions);
+                    retakeQuiz = quizRepository.save(retakeQuiz);
+                    retakeQuizId = retakeQuiz.getId();
+
+                    log.info("Created retake quiz {} with {} incorrect questions for child {}",
+                            retakeQuizId, incorrectQuestionObjects.size(), child.getId());
+                }
             } catch (Exception e) {
-                log.error("Failed to generate hint: {}", e.getMessage(), e);
+                log.error("Failed to generate hint or retake quiz: {}", e.getMessage(), e);
                 hintMessage = "You're making progress! Review the questions you got wrong and try to understand the concepts better.";
             }
         }
@@ -339,6 +395,7 @@ public class QuizService {
                 .totalQuestions(totalQuestions)
                 .correctAnswers(correctAnswers)
                 .learningPath(learningPath)  // Include learning path if generated
+                .retakeQuizId(retakeQuizId)  // Include retake quiz ID if generated
                 .build();
     }
     
