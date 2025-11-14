@@ -1,6 +1,5 @@
 package com.thinkfirst.dto;
 
-import com.thinkfirst.model.Achievement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +21,7 @@ public class ProgressReport {
     private Integer totalQuestionsAnswered;
     private Integer totalTimeSpentMinutes;
     private Double averageScore;
-    private List<Achievement> recentAchievements;
+    private List<AchievementDTO> recentAchievements;
     private Map<String, SubjectProgress> subjectProgress;
 
     @Data

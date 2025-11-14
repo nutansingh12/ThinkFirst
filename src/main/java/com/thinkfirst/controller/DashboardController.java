@@ -1,7 +1,7 @@
 package com.thinkfirst.controller;
 
+import com.thinkfirst.dto.AchievementDTO;
 import com.thinkfirst.dto.ProgressReport;
-import com.thinkfirst.model.Achievement;
 import com.thinkfirst.service.AchievementService;
 import com.thinkfirst.service.ProgressTrackingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,16 +23,16 @@ public class DashboardController {
         this.progressTrackingService = progressTrackingService;
         this.achievementService = achievementService;
     }
-    
+
     @GetMapping("/child/{childId}/progress")
     @Operation(summary = "Get comprehensive progress report for a child")
     public ResponseEntity<ProgressReport> getProgressReport(@PathVariable Long childId) {
         return ResponseEntity.ok(progressTrackingService.getProgressReport(childId));
     }
-    
+
     @GetMapping("/child/{childId}/achievements")
     @Operation(summary = "Get all achievements for a child")
-    public ResponseEntity<List<Achievement>> getAchievements(@PathVariable Long childId) {
+    public ResponseEntity<List<AchievementDTO>> getAchievements(@PathVariable Long childId) {
         return ResponseEntity.ok(achievementService.getChildAchievements(childId));
     }
 }

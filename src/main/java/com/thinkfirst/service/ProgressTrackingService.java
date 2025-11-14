@@ -1,5 +1,6 @@
 package com.thinkfirst.service;
 
+import com.thinkfirst.dto.AchievementDTO;
 import com.thinkfirst.dto.ProgressReport;
 import com.thinkfirst.model.Achievement;
 import com.thinkfirst.model.Child;
@@ -16,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ProgressTrackingService {
@@ -104,14 +106,15 @@ public class ProgressTrackingService {
                 .orElseThrow(() -> new RuntimeException("Child not found"));
         
         List<SkillLevel> skillLevels = skillLevelRepository.findByChildId(childId);
-        List<Achievement> recentAchievements = achievementRepository
+        List<AchievementDTO> recentAchievements = achievementRepository
                 .findByChildIdOrderByEarnedAtDesc(childId)
                 .stream()
                 .limit(5)
-                .toList();
-        
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+
         Double averageScore = quizAttemptRepository.getAverageScoreByChildId(childId);
-        
+
         Map<String, ProgressReport.SubjectProgress> subjectProgress = new HashMap<>();
         for (SkillLevel skillLevel : skillLevels) {
             subjectProgress.put(
@@ -125,7 +128,7 @@ public class ProgressTrackingService {
                             .build()
             );
         }
-        
+
         return ProgressReport.builder()
                 .childId(child.getId())
                 .childUsername(child.getUsername())
@@ -136,6 +139,21 @@ public class ProgressTrackingService {
                 .averageScore(averageScore != null ? averageScore : 0.0)
                 .recentAchievements(recentAchievements)
                 .subjectProgress(subjectProgress)
+                .build();
+    }
+
+    /**
+     * Map Achievement entity to DTO
+     */
+    private AchievementDTO mapToDTO(Achievement achievement) {
+        return AchievementDTO.builder()
+                .id(achievement.getId())
+                .badgeName(achievement.getBadgeName())
+                .description(achievement.getDescription())
+                .iconUrl(achievement.getIconUrl())
+                .type(achievement.getType() != null ? achievement.getType().name() : null)
+                .points(achievement.getPoints())
+                .earnedAt(achievement.getEarnedAt())
                 .build();
     }
 }

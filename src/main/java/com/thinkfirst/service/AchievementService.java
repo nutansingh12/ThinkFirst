@@ -1,5 +1,6 @@
 package com.thinkfirst.service;
 
+import com.thinkfirst.dto.AchievementDTO;
 import com.thinkfirst.model.Achievement;
 import com.thinkfirst.model.Child;
 import com.thinkfirst.repository.AchievementRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AchievementService {
@@ -81,8 +83,26 @@ public class AchievementService {
         }
     }
     
-    public List<Achievement> getChildAchievements(Long childId) {
-        return achievementRepository.findByChildIdOrderByEarnedAtDesc(childId);
+    public List<AchievementDTO> getChildAchievements(Long childId) {
+        return achievementRepository.findByChildIdOrderByEarnedAtDesc(childId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Map Achievement entity to DTO
+     */
+    private AchievementDTO mapToDTO(Achievement achievement) {
+        return AchievementDTO.builder()
+                .id(achievement.getId())
+                .badgeName(achievement.getBadgeName())
+                .description(achievement.getDescription())
+                .iconUrl(achievement.getIconUrl())
+                .type(achievement.getType() != null ? achievement.getType().name() : null)
+                .points(achievement.getPoints())
+                .earnedAt(achievement.getEarnedAt())
+                .build();
     }
 }
 

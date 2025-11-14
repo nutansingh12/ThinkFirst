@@ -1,5 +1,6 @@
 package com.thinkfirst.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,13 +17,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Achievement {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "child_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "achievements", "parent", "chatSessions", "quizAttempts", "skillLevels", "learningPaths"})
     private Child child;
     
     private String badgeName; // "Math Master", "Science Explorer"
