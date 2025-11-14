@@ -1,6 +1,7 @@
 package com.thinkfirst.service;
 
 import com.thinkfirst.dto.ChatResponse;
+import com.thinkfirst.dto.QuizGenerationResult;
 import com.thinkfirst.dto.QuizResult;
 import com.thinkfirst.dto.QuizSubmission;
 import com.thinkfirst.model.*;
@@ -71,43 +72,56 @@ public class QuizService {
 
     /**
      * Generate a prerequisite quiz for a subject
+     * OPTIMIZED: Detects subject from query in the same API call as question generation
      */
     @Transactional
     public Quiz generatePrerequisiteQuiz(Long childId, Integer age, Subject subject, String query) {
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> new RuntimeException("Child not found"));
-        
+
         SkillLevel skillLevel = getOrCreateSkillLevel(child, subject);
 
-        // Generate questions using AI provider (with automatic fallback)
-        List<Question> questions = aiProviderService.generateQuestions(
+        // OPTIMIZATION: Generate questions with subject detection in a single API call
+        // This saves one API call compared to analyzing subject separately
+        log.info("Generating prerequisite quiz with subject detection for query: {}", query);
+        QuizGenerationResult result = aiProviderService.generateQuestionsWithSubject(
                 query,
-                subject.getName(),
                 defaultQuestionCount,
                 skillLevel.getCurrentLevel().name(),
                 age
         );
-        
+
+        // Update session subject if AI detected a more specific subject
+        Subject detectedSubject = subject;
+        if (!result.getDetectedSubject().equalsIgnoreCase("General") &&
+            !result.getDetectedSubject().equalsIgnoreCase(subject.getName())) {
+            // Try to find the detected subject in database
+            detectedSubject = subjectRepository.findByName(result.getDetectedSubject())
+                    .orElse(subject); // Fall back to original subject if not found
+            log.info("AI detected subject: {} (using: {})", result.getDetectedSubject(), detectedSubject.getName());
+        }
+
         Quiz quiz = Quiz.builder()
-                .subject(subject)
+                .subject(detectedSubject)
                 .difficulty(Quiz.DifficultyLevel.valueOf(skillLevel.getCurrentLevel().name()))
                 .type(Quiz.QuizType.PREREQUISITE)
                 .passingScore(passingScore)
-                .title("Prerequisites for " + subject.getName())
-                .description("Complete this quiz to unlock full answers about " + subject.getName())
+                .title("Prerequisites for " + detectedSubject.getName())
+                .description("Complete this quiz to unlock full answers about " + detectedSubject.getName())
                 .active(true)
                 .build();
-        
+
         quiz = quizRepository.save(quiz);
-        
+
         // Associate questions with quiz
+        List<Question> questions = result.getQuestions();
         for (int i = 0; i < questions.size(); i++) {
             Question q = questions.get(i);
             q.setQuiz(quiz);
             q.setDisplayOrder(i);
         }
         quiz.setQuestions(questions);
-        
+
         return quizRepository.save(quiz);
     }
     

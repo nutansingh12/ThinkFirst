@@ -1,6 +1,7 @@
 package com.thinkfirst.service.ai;
 
 import com.thinkfirst.config.AIProviderConfig;
+import com.thinkfirst.dto.QuizGenerationResult;
 import com.thinkfirst.exception.AIProviderException;
 import com.thinkfirst.exception.RateLimitException;
 import com.thinkfirst.model.Question;
@@ -109,7 +110,41 @@ public class AIProviderService {
 
         return questions;
     }
-    
+
+    /**
+     * Generate quiz questions with subject detection in a single call
+     * This is more efficient as it saves one API call by detecting subject and generating questions together
+     */
+    public QuizGenerationResult generateQuestionsWithSubject(String query, int count, String difficulty, Integer age) {
+        // Try cache first - we'll use "unknown" as subject for cache key since we don't know it yet
+        Optional<List<Question>> cached = cacheService.getCachedQuiz(query, "unknown", count, difficulty, age);
+        if (cached.isPresent()) {
+            log.info("Using cached quiz for query: {} (saved API call)", query);
+            // For cached results, we need to infer subject from the query
+            String subject = executeWithFallback(
+                provider -> provider.analyzeQuerySubject(query),
+                "analyzeQuerySubject"
+            );
+            return QuizGenerationResult.builder()
+                    .detectedSubject(subject)
+                    .questions(cached.get())
+                    .build();
+        }
+
+        // Cache miss - call AI provider with subject detection
+        log.info("Generating quiz with subject detection for query: {}", query);
+        QuizGenerationResult result = executeWithFallback(
+            provider -> provider.generateQuestionsWithSubject(query, count, difficulty, age),
+            "generateQuestionsWithSubject"
+        );
+
+        // Cache the questions with the detected subject
+        cacheService.cacheQuiz(query, result.getDetectedSubject(), count, difficulty, result.getQuestions(), age);
+
+        log.info("Quiz generated with detected subject: {}", result.getDetectedSubject());
+        return result;
+    }
+
     /**
      * Generate hint with automatic fallback and caching
      */

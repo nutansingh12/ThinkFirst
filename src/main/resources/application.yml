@@ -82,7 +82,7 @@ ai:
 
   # DeepSeek Configuration (Very cheap - $0.28/1M input, $0.42/1M output)
   deepseek:
-    enabled: ${DEEPSEEK_ENABLED:false}
+    enabled: ${DEEPSEEK_ENABLED:true}
     api-key: ${DEEPSEEK_API_KEY:}
     base-url: https://api.deepseek.com/v1
     models:

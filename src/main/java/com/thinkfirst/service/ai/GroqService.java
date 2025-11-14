@@ -3,6 +3,7 @@ package com.thinkfirst.service.ai;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thinkfirst.config.AIProviderConfig;
+import com.thinkfirst.dto.QuizGenerationResult;
 import com.thinkfirst.exception.AIProviderException;
 import com.thinkfirst.exception.RateLimitException;
 import com.thinkfirst.model.Question;
@@ -89,9 +90,9 @@ public class GroqService implements AIProvider {
         if (!isAvailable()) {
             throw new AIProviderException("Groq", "Groq API is not available or not configured");
         }
-        
+
         String systemPrompt = "You are an educational quiz generator. Generate questions in valid JSON format only.";
-        
+
         String userPrompt = String.format(
             "Generate %d multiple-choice questions about '%s' in the subject of %s at %s difficulty level, for the age of %d. " +
             "Return ONLY a valid JSON array with this exact structure (no markdown, no code blocks):\n" +
@@ -100,9 +101,35 @@ public class GroqService implements AIProvider {
             "Make questions educational and age-appropriate.",
             count, topic, subject, difficulty, age
         );
-        
+
         String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"), null);
         return parseQuestionsFromJSON(response);
+    }
+
+    @Override
+    public QuizGenerationResult generateQuestionsWithSubject(String query, int count, String difficulty, Integer age) {
+        if (!isAvailable()) {
+            throw new AIProviderException("Groq", "Groq API is not available or not configured");
+        }
+
+        String systemPrompt = "You are an educational quiz generator. Generate questions with subject detection in valid JSON format only.";
+
+        String userPrompt = String.format(
+            "Analyze this query: '%s'\n\n" +
+            "1. Determine the academic subject (e.g., Mathematics, Science, History, English, Geography, etc.)\n" +
+            "2. Generate %d multiple-choice questions about this topic at %s difficulty level, for age %d.\n\n" +
+            "Return ONLY a valid JSON object with this EXACT structure (no markdown, no code blocks):\n" +
+            "{\"subject\":\"Mathematics\",\"questions\":[{\"question\":\"What is 2+2?\",\"options\":[\"3\",\"4\",\"5\",\"6\"],\"correctIndex\":1,\"explanation\":\"2+2 equals 4\"}]}\n\n" +
+            "Requirements:\n" +
+            "- subject: Single word subject name (Mathematics, Science, History, English, Geography, Computer Science, Art, Music, or General)\n" +
+            "- questions: Array of %d questions\n" +
+            "- Each question must have 4 different answer options with actual text (not just A,B,C,D)\n" +
+            "- Make questions educational and age-appropriate for %d year olds",
+            query, count, difficulty, age, count, age
+        );
+
+        String response = callGroqAPI(systemPrompt, userPrompt, config.getGroq().getModels().get("default"), null);
+        return parseQuizGenerationResult(response);
     }
 
     @Override
@@ -200,6 +227,55 @@ public class GroqService implements AIProvider {
         }
     }
     
+    /**
+     * Parse quiz generation result with subject and questions
+     */
+    private QuizGenerationResult parseQuizGenerationResult(String jsonResponse) {
+        try {
+            // Clean up response - remove markdown code blocks if present
+            String cleanJson = jsonResponse.trim();
+            if (cleanJson.startsWith("```")) {
+                cleanJson = cleanJson.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();
+            }
+
+            JsonNode root = objectMapper.readTree(cleanJson);
+
+            // Extract subject
+            String subject = root.path("subject").asText("General");
+
+            // Extract questions array
+            JsonNode questionsArray = root.path("questions");
+            List<Question> questions = new ArrayList<>();
+
+            for (JsonNode questionNode : questionsArray) {
+                Question question = new Question();
+                question.setQuestionText(questionNode.path("question").asText());
+                question.setType(QuestionType.MULTIPLE_CHOICE);
+                question.setCorrectOptionIndex(questionNode.path("correctIndex").asInt());
+                question.setExplanation(questionNode.path("explanation").asText(""));
+
+                // Parse options
+                List<String> options = new ArrayList<>();
+                JsonNode optionsNode = questionNode.path("options");
+                for (JsonNode option : optionsNode) {
+                    options.add(option.asText());
+                }
+                question.setOptions(options);
+
+                questions.add(question);
+            }
+
+            return QuizGenerationResult.builder()
+                    .detectedSubject(subject)
+                    .questions(questions)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Failed to parse quiz generation result: {}", jsonResponse, e);
+            throw new AIProviderException("Groq", "Failed to parse quiz generation result: " + e.getMessage());
+        }
+    }
+
     private List<Question> parseQuestionsFromJSON(String jsonResponse) {
         List<Question> questions = new ArrayList<>();
         try {
@@ -208,7 +284,7 @@ public class GroqService implements AIProvider {
             if (cleanJson.startsWith("```")) {
                 cleanJson = cleanJson.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();
             }
-            
+
             JsonNode questionsArray = objectMapper.readTree(cleanJson);
             
             for (JsonNode questionNode : questionsArray) {
