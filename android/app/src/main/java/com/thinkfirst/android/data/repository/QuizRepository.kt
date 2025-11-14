@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.thinkfirst.android.data.api.ThinkFirstApi
 import com.thinkfirst.android.data.local.dao.QuizAttemptDao
 import com.thinkfirst.android.data.local.entity.QuizAttemptEntity
+import com.thinkfirst.android.data.model.Quiz
 import com.thinkfirst.android.data.model.QuizResult
 import com.thinkfirst.android.data.model.QuizSubmission
 import com.thinkfirst.android.util.NetworkMonitor
@@ -25,7 +26,20 @@ class QuizRepository @Inject constructor(
 ) {
     
     private val TAG = "QuizRepository"
-    
+
+    /**
+     * Get quiz by ID from API
+     */
+    suspend fun getQuiz(quizId: Long): Result<Quiz> {
+        return try {
+            val quiz = api.getQuiz(quizId)
+            Result.success(quiz)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get quiz $quizId", e)
+            Result.failure(e)
+        }
+    }
+
     /**
      * Submit a quiz (online or offline)
      */

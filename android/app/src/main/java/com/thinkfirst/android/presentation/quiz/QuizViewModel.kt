@@ -30,26 +30,42 @@ class QuizViewModel @Inject constructor(
     private var quizStartTime: Long = 0  // Track when quiz started
     
     /**
-     * Load quiz data
-     * Note: In a real implementation, this would fetch quiz from API
-     * For now, we'll use mock data since the quiz is passed from ChatScreen
+     * Load quiz data from API
      */
     fun loadQuiz(quizId: Long, childId: Long) {
         this.quizId = quizId
         this.childId = childId
-        
+        this.quizStartTime = System.currentTimeMillis()  // Record start time
+
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             error = null
         )
-        
+
         viewModelScope.launch {
             try {
-                // TODO: Fetch quiz from API or cache
-                // For now, show error that quiz should be passed from ChatScreen
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Quiz data should be passed from chat screen"
+                // Fetch quiz from API
+                val result = quizRepository.getQuiz(quizId)
+
+                result.fold(
+                    onSuccess = { quiz ->
+                        _uiState.value = QuizUiState(
+                            questions = quiz.questions,
+                            currentQuestionIndex = 0,
+                            selectedAnswers = emptyMap(),
+                            timeRemaining = quiz.timeLimit?.toLong(),
+                            isLoading = false
+                        )
+
+                        // Start timer if time limit exists
+                        quiz.timeLimit?.let { startTimer(it.toLong()) }
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = error.message ?: "Failed to load quiz"
+                        )
+                    }
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
