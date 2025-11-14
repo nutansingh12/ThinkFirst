@@ -234,9 +234,14 @@ public class QuizService {
                 .build();
         
         attempt = quizAttemptRepository.save(attempt);
-        
-        // Update skill level
-        updateSkillLevel(child, quiz.getSubject(), score, passed);
+
+        // Check if this is a retake quiz (has originalQuiz reference)
+        boolean isRetakeQuiz = quiz.getOriginalQuiz() != null;
+
+        // Update skill level (only for original quizzes, not retakes)
+        if (!isRetakeQuiz) {
+            updateSkillLevel(child, quiz.getSubject(), score, passed);
+        }
 
         // Update child stats
         // Handle null values for existing children that might not have these fields initialized
@@ -244,13 +249,18 @@ public class QuizService {
         Integer currentQuestions = child.getTotalQuestionsAnswered() != null ? child.getTotalQuestionsAnswered() : 0;
         Integer currentTimeMinutes = child.getTotalTimeSpentMinutes() != null ? child.getTotalTimeSpentMinutes() : 0;
 
-        child.setTotalQuizzesCompleted(currentQuizzes + 1);
+        // Only increment quiz count for original quizzes, not retakes
+        if (!isRetakeQuiz) {
+            child.setTotalQuizzesCompleted(currentQuizzes + 1);
+            log.info("Updating child {} stats: quizzes {} -> {}, questions {} -> {}",
+                    child.getId(), currentQuizzes, currentQuizzes + 1,
+                    currentQuestions, currentQuestions + totalQuestions);
+        } else {
+            log.info("Retake quiz - NOT incrementing quiz count for child {}", child.getId());
+        }
+
         child.setTotalQuestionsAnswered(currentQuestions + totalQuestions);
         child.setLastActiveDate(LocalDateTime.now());
-
-        log.info("Updating child {} stats: quizzes {} -> {}, questions {} -> {}",
-                child.getId(), currentQuizzes, currentQuizzes + 1,
-                currentQuestions, currentQuestions + totalQuestions);
 
         // Update streak
         progressTrackingService.updateStreak(child);
@@ -262,12 +272,14 @@ public class QuizService {
 
         Child savedChild = childRepository.save(child);
 
-        log.info("Child {} stats after save: quizzes={}, questions={}, timeMinutes={}",
+        log.info("Child {} stats after save: quizzes={}, questions={}, timeMinutes={}, isRetake={}",
                 savedChild.getId(), savedChild.getTotalQuizzesCompleted(),
-                savedChild.getTotalQuestionsAnswered(), savedChild.getTotalTimeSpentMinutes());
+                savedChild.getTotalQuestionsAnswered(), savedChild.getTotalTimeSpentMinutes(), isRetakeQuiz);
 
-        // Check for achievements
-        achievementService.checkAndAwardAchievements(child, score, passed);
+        // Check for achievements (only for original quizzes, not retakes)
+        if (!isRetakeQuiz) {
+            achievementService.checkAndAwardAchievements(child, score, passed);
+        }
 
         // Get the answer message if student passed (for verification quizzes)
         String answerMessage = null;
