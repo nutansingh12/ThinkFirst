@@ -32,6 +32,9 @@ public class ChatService {
     private final ProgressTrackingService progressTrackingService;
     private final ContentModerationService contentModerationService;
     private final LearningPathService learningPathService;
+    private final MascotService mascotService;
+    private final SubjectStatisticsService subjectStatisticsService;
+    private final BadgeService badgeService;
 
     public ChatService(
             ChatSessionRepository chatSessionRepository,
@@ -43,7 +46,10 @@ public class ChatService {
             QuizService quizService,
             ProgressTrackingService progressTrackingService,
             ContentModerationService contentModerationService,
-            LearningPathService learningPathService) {
+            LearningPathService learningPathService,
+            MascotService mascotService,
+            SubjectStatisticsService subjectStatisticsService,
+            BadgeService badgeService) {
         this.chatSessionRepository = chatSessionRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.childRepository = childRepository;
@@ -54,6 +60,9 @@ public class ChatService {
         this.progressTrackingService = progressTrackingService;
         this.contentModerationService = contentModerationService;
         this.learningPathService = learningPathService;
+        this.mascotService = mascotService;
+        this.subjectStatisticsService = subjectStatisticsService;
+        this.badgeService = badgeService;
     }
     
     /**
@@ -155,9 +164,15 @@ public class ChatService {
         if (!hasPrerequisite) {
             // Step 3: Generate prerequisite quiz
             Quiz quiz = quizService.generatePrerequisiteQuiz(child.getId(), child.getAge(), subject, query);
-            
+
+            // Record question in subject statistics
+            subjectStatisticsService.recordQuestion(child.getId(), subject.getId());
+
             response = ChatResponse.withQuiz(quiz);
-            
+
+            // Add Quizzy's quiz start message
+            response.setMascotMessage(mascotService.getQuizStartMessage(subject));
+
             // Save assistant message with quiz requirement
             ChatMessage assistantMessage = ChatMessage.builder()
                     .chatSession(session)
@@ -167,7 +182,7 @@ public class ChatService {
                     .requiresQuizCompletion(true)
                     .build();
             chatMessageRepository.save(assistantMessage);
-            
+
         } else {
             // Step 4: Generate AI response (but don't send it yet)
             String aiResponse = aiProviderService.generateEducationalResponse(

@@ -25,6 +25,8 @@ public class QuizResult {
     private Integer correctAnswers;
     private LearningPathResponse learningPath;  // Learning path (only if failed with score < 40%)
     private Long retakeQuizId;  // ID of retake quiz with only incorrect questions (for scores 40-69%)
+    private MascotMessageDTO mascotMessage;  // Quizzy the Owl's message
+    private List<BadgeDTO> newBadges;  // Newly earned badges
     
     @Data
     @Builder

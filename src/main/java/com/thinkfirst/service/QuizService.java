@@ -1,9 +1,6 @@
 package com.thinkfirst.service;
 
-import com.thinkfirst.dto.ChatResponse;
-import com.thinkfirst.dto.QuizGenerationResult;
-import com.thinkfirst.dto.QuizResult;
-import com.thinkfirst.dto.QuizSubmission;
+import com.thinkfirst.dto.*;
 import com.thinkfirst.model.*;
 import com.thinkfirst.repository.*;
 import org.slf4j.Logger;
@@ -32,6 +29,9 @@ public class QuizService {
     private final AchievementService achievementService;
     private final LearningPathService learningPathService;
     private final ProgressTrackingService progressTrackingService;
+    private final MascotService mascotService;
+    private final SubjectStatisticsService subjectStatisticsService;
+    private final BadgeService badgeService;
 
     @Value("${app.quiz.passing-score}")
     private Integer passingScore;
@@ -49,7 +49,10 @@ public class QuizService {
             com.thinkfirst.service.ai.AIProviderService aiProviderService,
             AchievementService achievementService,
             LearningPathService learningPathService,
-            ProgressTrackingService progressTrackingService) {
+            ProgressTrackingService progressTrackingService,
+            MascotService mascotService,
+            SubjectStatisticsService subjectStatisticsService,
+            BadgeService badgeService) {
         this.quizRepository = quizRepository;
         this.quizAttemptRepository = quizAttemptRepository;
         this.childRepository = childRepository;
@@ -60,6 +63,9 @@ public class QuizService {
         this.achievementService = achievementService;
         this.learningPathService = learningPathService;
         this.progressTrackingService = progressTrackingService;
+        this.mascotService = mascotService;
+        this.subjectStatisticsService = subjectStatisticsService;
+        this.badgeService = badgeService;
     }
     
     /**
@@ -293,10 +299,19 @@ public class QuizService {
                 savedChild.getId(), savedChild.getTotalQuizzesCompleted(),
                 savedChild.getTotalQuestionsAnswered(), savedChild.getTotalTimeSpentMinutes(), isRetakeQuiz);
 
+        // Record quiz in subject statistics
+        subjectStatisticsService.recordQuiz(child.getId(), quiz.getSubject().getId(), score, timeSpentMinutes);
+
         // Check for achievements (only for original quizzes, not retakes)
         if (!isRetakeQuiz) {
             achievementService.checkAndAwardAchievements(child, score, passed);
         }
+
+        // Check for newly earned badges
+        List<BadgeDTO> newBadges = badgeService.checkAndAwardBadges(child.getId());
+
+        // Get Quizzy's message based on quiz result
+        MascotMessageDTO mascotMessage = mascotService.getQuizResultMessage(score, quiz.getSubject());
 
         // Get the answer message if student passed (for verification quizzes)
         String answerMessage = null;
@@ -444,6 +459,8 @@ public class QuizService {
                 .correctAnswers(correctAnswers)
                 .learningPath(learningPath)  // Include learning path if generated
                 .retakeQuizId(retakeQuizId)  // Include retake quiz ID if generated
+                .mascotMessage(mascotMessage)  // Quizzy's encouraging message
+                .newBadges(newBadges)  // Newly earned badges
                 .build();
     }
     

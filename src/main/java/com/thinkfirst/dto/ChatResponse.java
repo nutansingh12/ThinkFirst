@@ -6,17 +6,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatResponse {
-    
+
     private String message;
     private ResponseType responseType;
     private Quiz quiz;
     private String hint;
     private Long messageId;
+    private MascotMessageDTO mascotMessage;
+    private List<BadgeDTO> newBadges;
     
     public enum ResponseType {
         FULL_ANSWER,           // 70%+ score - full detailed answer
