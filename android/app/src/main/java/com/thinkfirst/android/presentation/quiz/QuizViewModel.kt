@@ -137,6 +137,7 @@ class QuizViewModel @Inject constructor(
 
                 // Calculate time spent in seconds
                 val timeSpentSeconds = ((System.currentTimeMillis() - quizStartTime) / 1000).toInt()
+                android.util.Log.d("QuizViewModel", "Submitting quiz - timeSpentSeconds: $timeSpentSeconds, quizStartTime: $quizStartTime, currentTime: ${System.currentTimeMillis()}")
 
                 val result = quizRepository.submitQuiz(
                     quizId = quizId,

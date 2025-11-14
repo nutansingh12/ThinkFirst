@@ -44,6 +44,7 @@ class QuizRepository @Inject constructor(
                     answers = answers,
                     timeSpentSeconds = timeSpentSeconds
                 )
+                android.util.Log.d(TAG, "Submitting quiz to API - submission: $submission")
                 val result = api.submitQuiz(submission)
                 
                 // Cache the attempt
