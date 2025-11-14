@@ -57,12 +57,21 @@ public class SubjectStatisticsService {
                 .orElse(SubjectStatistics.builder()
                         .child(child)
                         .subject(subject)
+                        .totalQuestions(0)
+                        .totalQuizzes(0)
+                        .correctAnswers(0)
+                        .timeSpentMinutes(0)
+                        .currentStreak(0)
+                        .bestStreak(0)
+                        .proficiencyLevel(0)
+                        .lastActivityAt(LocalDateTime.now())
+                        .createdAt(LocalDateTime.now())
                         .build());
-        
+
         stats.setTotalQuestions(stats.getTotalQuestions() + 1);
         stats.setLastActivityAt(LocalDateTime.now());
         stats.updateCategoryTitle();
-        
+
         subjectStatisticsRepository.save(stats);
         log.info("Recorded question for child {} in subject {}", child.getUsername(), subject.getName());
     }
@@ -82,12 +91,24 @@ public class SubjectStatisticsService {
                 .orElse(SubjectStatistics.builder()
                         .child(child)
                         .subject(subject)
+                        .totalQuestions(0)
+                        .totalQuizzes(0)
+                        .correctAnswers(0)
+                        .timeSpentMinutes(0)
+                        .currentStreak(0)
+                        .bestStreak(0)
+                        .proficiencyLevel(0)
+                        .lastActivityAt(LocalDateTime.now())
+                        .createdAt(LocalDateTime.now())
                         .build());
-        
+
+        int oldQuizzes = stats.getTotalQuizzes();
+        int oldQuestions = stats.getTotalQuestions();
+
         stats.setTotalQuizzes(stats.getTotalQuizzes() + 1);
         stats.setTimeSpentMinutes(stats.getTimeSpentMinutes() + timeSpentMinutes);
         stats.setLastActivityAt(LocalDateTime.now());
-        
+
         // Update streak
         if (score >= 70) {
             stats.setCurrentStreak(stats.getCurrentStreak() + 1);
@@ -97,12 +118,12 @@ public class SubjectStatisticsService {
         } else {
             stats.setCurrentStreak(0);
         }
-        
+
         stats.updateCategoryTitle();
         subjectStatisticsRepository.save(stats);
-        
-        log.info("Recorded quiz for child {} in subject {} with score {}", 
-                child.getUsername(), subject.getName(), score);
+
+        log.info("Updating child {} stats: quizzes {} -> {}, questions {} -> {}",
+                child.getId(), oldQuizzes, stats.getTotalQuizzes(), oldQuestions, stats.getTotalQuestions());
     }
     
     /**
