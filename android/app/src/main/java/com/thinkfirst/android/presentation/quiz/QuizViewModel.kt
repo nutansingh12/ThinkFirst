@@ -23,10 +23,11 @@ class QuizViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(QuizUiState())
     val uiState: StateFlow<QuizUiState> = _uiState.asStateFlow()
-    
+
     private var timerJob: Job? = null
     private var quizId: Long = 0
     private var childId: Long = 0
+    private var quizStartTime: Long = 0  // Track when quiz started
     
     /**
      * Load quiz data
@@ -70,7 +71,8 @@ class QuizViewModel @Inject constructor(
     ) {
         this.quizId = quizId
         this.childId = childId
-        
+        this.quizStartTime = System.currentTimeMillis()  // Record start time
+
         _uiState.value = QuizUiState(
             questions = questions,
             currentQuestionIndex = 0,
@@ -78,7 +80,7 @@ class QuizViewModel @Inject constructor(
             timeRemaining = timeLimit?.toLong(),
             isLoading = false
         )
-        
+
         // Start timer if time limit exists
         timeLimit?.let { startTimer(it.toLong()) }
     }
@@ -127,16 +129,20 @@ class QuizViewModel @Inject constructor(
      */
     fun submitQuiz() {
         _uiState.value = _uiState.value.copy(isLoading = true)
-        
+
         viewModelScope.launch {
             try {
                 // Stop timer
                 timerJob?.cancel()
-                
+
+                // Calculate time spent in seconds
+                val timeSpentSeconds = ((System.currentTimeMillis() - quizStartTime) / 1000).toInt()
+
                 val result = quizRepository.submitQuiz(
                     quizId = quizId,
                     childId = childId,
-                    answers = _uiState.value.selectedAnswers
+                    answers = _uiState.value.selectedAnswers,
+                    timeSpentSeconds = timeSpentSeconds
                 )
                 
                 result.fold(

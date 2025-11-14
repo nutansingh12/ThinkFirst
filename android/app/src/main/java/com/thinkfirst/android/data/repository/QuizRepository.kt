@@ -32,7 +32,8 @@ class QuizRepository @Inject constructor(
     suspend fun submitQuiz(
         quizId: Long,
         childId: Long,
-        answers: Map<Long, String>
+        answers: Map<Long, String>,
+        timeSpentSeconds: Int? = null
     ): Result<QuizResult> {
         return try {
             if (networkMonitor.isCurrentlyConnected()) {
@@ -40,7 +41,8 @@ class QuizRepository @Inject constructor(
                 val submission = QuizSubmission(
                     quizId = quizId,
                     childId = childId,
-                    answers = answers
+                    answers = answers,
+                    timeSpentSeconds = timeSpentSeconds
                 )
                 val result = api.submitQuiz(submission)
                 
