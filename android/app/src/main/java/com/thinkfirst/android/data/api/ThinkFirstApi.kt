@@ -79,5 +79,18 @@ interface ThinkFirstApi {
         @Path("learningPathId") learningPathId: Long,
         @Query("childId") childId: Long
     ): LearningPath
+
+    // Profile and Badges
+    @GET("profile/{childId}")
+    suspend fun getLearningProfile(@Path("childId") childId: Long): LearningProfileDTO
+
+    @GET("profile/{childId}/badges")
+    suspend fun getBadges(@Path("childId") childId: Long): List<BadgeDTO>
+
+    @GET("profile/{childId}/badges/new")
+    suspend fun getNewBadges(@Path("childId") childId: Long): List<BadgeDTO>
+
+    @POST("profile/{childId}/badges/mark-seen")
+    suspend fun markBadgesAsSeen(@Path("childId") childId: Long)
 }
 

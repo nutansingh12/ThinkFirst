@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.thinkfirst.android.data.model.ChatMessage
 import com.thinkfirst.android.data.model.MessageRole
+import com.thinkfirst.android.presentation.components.QuizzyMessage
 import com.thinkfirst.android.presentation.learning.LearningJourneyScreen
 import com.thinkfirst.android.presentation.learning.LearningJourneyViewModel
 
@@ -396,11 +397,66 @@ fun QuizResultDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (result.passed) "Great Job! 🎉" else "Keep Trying! 💪") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                // Quizzy's encouraging message
+                result.mascotMessage?.let { mascotMessage ->
+                    QuizzyMessage(mascotMessage = mascotMessage)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 Text("Score: ${result.score}%")
                 Text("Correct: ${result.correctAnswers}/${result.totalQuestions}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(result.feedbackMessage)
+
+                // Show newly earned badges
+                result.newBadges?.takeIf { it.isNotEmpty() }?.let { badges ->
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "🏆 New Badges Earned!",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            badges.forEach { badge ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = badge.icon,
+                                        style = MaterialTheme.typography.titleLarge
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = badge.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        badge.description?.let { desc ->
+                                            Text(
+                                                text = desc,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Show hint if available (for scores 40-69%)
                 result.hintMessage?.let { hint ->

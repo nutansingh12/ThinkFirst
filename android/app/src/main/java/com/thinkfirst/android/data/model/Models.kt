@@ -71,7 +71,9 @@ data class ChatResponse(
     val responseLevel: String?,  // Added for backend compatibility
     val quiz: Quiz?,
     val hint: String?,
-    val messageId: Long?
+    val messageId: Long?,
+    val mascotMessage: MascotMessageDTO? = null,  // Quizzy the Owl's message
+    val newBadges: List<BadgeDTO>? = null  // Newly earned badges
 )
 
 enum class ResponseType {
@@ -195,7 +197,9 @@ data class QuizResult(
     val totalQuestions: Int,
     val correctAnswers: Int,
     val learningPath: LearningPath? = null,  // Learning path (only if failed with score < 40%)
-    val retakeQuizId: Long? = null  // ID of retake quiz with only incorrect questions (for scores 40-69%)
+    val retakeQuizId: Long? = null,  // ID of retake quiz with only incorrect questions (for scores 40-69%)
+    val mascotMessage: MascotMessageDTO? = null,  // Quizzy the Owl's encouraging message
+    val newBadges: List<BadgeDTO>? = null  // Newly earned badges
 )
 
 data class QuestionResult(
@@ -304,3 +308,45 @@ data class LessonResource(
     val description: String?
 )
 
+// Mascot and Achievement Models
+data class MascotMessageDTO(
+    val message: String,
+    val type: String,
+    val icon: String = "🦉"
+)
+
+data class BadgeDTO(
+    val id: Long,
+    val code: String,
+    val name: String,
+    val description: String?,
+    val icon: String,
+    val category: String,
+    val rarity: String,
+    val earned: Boolean,
+    val earnedAt: String?,
+    val progress: Int,  // 0-100% progress towards earning
+    val criteriaType: String,
+    val criteriaValue: Int,
+    val isNew: Boolean = false  // True if just earned and not yet seen
+)
+
+data class SubjectStatisticsDTO(
+    val subjectName: String,
+    val subjectIcon: String,
+    val categoryTitle: String,
+    val totalQuestions: Int,
+    val totalQuizzes: Int,
+    val correctAnswers: Int,
+    val timeSpentMinutes: Int,
+    val currentStreak: Int,
+    val bestStreak: Int,
+    val proficiencyLevel: Int
+)
+
+data class LearningProfileDTO(
+    val topSubjects: List<SubjectStatisticsDTO>,
+    val totalQuestions: Int,
+    val totalBadges: Int,
+    val currentStreak: Int
+)
