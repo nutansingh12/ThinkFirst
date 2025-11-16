@@ -20,8 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.thinkfirst.android.data.model.BadgeDTO
 import com.thinkfirst.android.data.model.ChatMessage
 import com.thinkfirst.android.data.model.MessageRole
+import com.thinkfirst.android.presentation.components.BadgeUnlockDialog
 import com.thinkfirst.android.presentation.components.QuizzyMessage
 import com.thinkfirst.android.presentation.learning.LearningJourneyScreen
 import com.thinkfirst.android.presentation.learning.LearningJourneyViewModel
@@ -39,6 +41,7 @@ fun ChatScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val loadingMessage by viewModel.loadingMessage.collectAsState()
     var messageText by remember { mutableStateOf("") }
+    var showBadgeUnlock by remember { mutableStateOf<List<BadgeDTO>?>(null) }
 
     LaunchedEffect(childId) {
         viewModel.initializeSession(childId)
@@ -227,6 +230,9 @@ fun ChatScreen(
                     onRetakeIncorrect = { quizId ->
                         viewModel.dismissQuiz()
                         viewModel.loadQuiz(quizId)
+                    },
+                    onShowBadges = { badges ->
+                        showBadgeUnlock = badges
                     }
                 )
             }
@@ -259,6 +265,14 @@ fun ChatScreen(
                 )
             }
             else -> {}
+        }
+
+        // Badge unlock celebration dialog
+        showBadgeUnlock?.let { badges ->
+            BadgeUnlockDialog(
+                badges = badges,
+                onDismiss = { showBadgeUnlock = null }
+            )
         }
     }
 }
@@ -391,8 +405,15 @@ fun QuizDialog(
 fun QuizResultDialog(
     result: com.thinkfirst.android.data.model.QuizResult,
     onDismiss: () -> Unit,
-    onRetakeIncorrect: (Long) -> Unit = {}
+    onRetakeIncorrect: (Long) -> Unit = {},
+    onShowBadges: (List<BadgeDTO>) -> Unit = {}
 ) {
+    // Show badge unlock dialog if there are new badges
+    LaunchedEffect(result.newBadges) {
+        result.newBadges?.takeIf { it.isNotEmpty() }?.let { badges ->
+            onShowBadges(badges)
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (result.passed) "Great Job! 🎉" else "Keep Trying! 💪") },
