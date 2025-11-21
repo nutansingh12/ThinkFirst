@@ -166,7 +166,13 @@ public class ChatService {
             Quiz quiz = quizService.generatePrerequisiteQuiz(child.getId(), child.getAge(), subject, query);
 
             // Record question in subject statistics
-            subjectStatisticsService.recordQuestion(child.getId(), subject.getId());
+            try {
+                subjectStatisticsService.recordQuestion(child.getId(), subject.getId());
+            } catch (Exception e) {
+                log.error("Failed to record question statistics for child {} in subject {}: {}",
+                    child.getId(), subject.getId(), e.getMessage());
+                // Continue - don't fail the whole request if statistics tracking fails
+            }
 
             response = ChatResponse.withQuiz(quiz);
 

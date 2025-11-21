@@ -300,7 +300,13 @@ public class QuizService {
                 savedChild.getTotalQuestionsAnswered(), savedChild.getTotalTimeSpentMinutes(), isRetakeQuiz);
 
         // Record quiz in subject statistics
-        subjectStatisticsService.recordQuiz(child.getId(), quiz.getSubject().getId(), score, timeSpentMinutes);
+        try {
+            subjectStatisticsService.recordQuiz(child.getId(), quiz.getSubject().getId(), score, timeSpentMinutes);
+        } catch (Exception e) {
+            log.error("Failed to record quiz statistics for child {} in subject {}: {}",
+                child.getId(), quiz.getSubject().getId(), e.getMessage());
+            // Continue - don't fail the whole request if statistics tracking fails
+        }
 
         // Check for achievements (only for original quizzes, not retakes)
         if (!isRetakeQuiz) {
@@ -308,7 +314,13 @@ public class QuizService {
         }
 
         // Check for newly earned badges
-        List<BadgeDTO> newBadges = badgeService.checkAndAwardBadges(child.getId());
+        List<BadgeDTO> newBadges = List.of(); // Default to empty list
+        try {
+            newBadges = badgeService.checkAndAwardBadges(child.getId());
+        } catch (Exception e) {
+            log.error("Failed to check badges for child {}: {}", child.getId(), e.getMessage());
+            // Continue - don't fail the whole request if badge checking fails
+        }
 
         // Get Quizzy's message based on quiz result
         MascotMessageDTO mascotMessage = mascotService.getQuizResultMessage(score, quiz.getSubject());
