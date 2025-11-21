@@ -182,26 +182,39 @@ public class DeepSeekService implements AIProvider {
                                     }))
                     .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
+                                    .defaultIfEmpty("Unknown client error")
                                     .flatMap(body -> {
                                         log.error("DeepSeek API 4xx error: {}", body);
                                         return Mono.error(new AIProviderException("DeepSeek", "Client error: " + body));
                                     }))
                     .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
+                                    .defaultIfEmpty("Unknown server error")
                                     .flatMap(body -> {
                                         log.error("DeepSeek API 5xx error: {}", body);
                                         return Mono.error(new AIProviderException("DeepSeek", "Server error: " + body));
                                     }))
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(config.getDeepseek().getTimeoutSeconds()))
+                    .doOnError(error -> log.error("DeepSeek API call failed: {}", error.getMessage()))
+                    .onErrorMap(java.util.concurrent.TimeoutException.class,
+                            e -> new AIProviderException("DeepSeek", "Request timeout after " + config.getDeepseek().getTimeoutSeconds() + " seconds"))
                     .block();
 
+            if (response == null || response.isEmpty()) {
+                throw new AIProviderException("DeepSeek", "Empty response from API");
+            }
+
             return extractContentFromResponse(response);
-            
+
         } catch (RateLimitException e) {
+            log.warn("DeepSeek rate limit exception: {}", e.getMessage());
+            throw e;
+        } catch (AIProviderException e) {
+            log.error("DeepSeek AI provider exception: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error calling DeepSeek API: {}", e.getMessage(), e);
+            log.error("Unexpected error calling DeepSeek API: {}", e.getMessage(), e);
             throw new AIProviderException("DeepSeek", "Failed to call DeepSeek API: " + e.getMessage(), e);
         }
     }

@@ -184,31 +184,51 @@ public class GroqService implements AIProvider {
                 "temperature", config.getGroq().getTemperature(),
                 "max_tokens", maxTokens
             );
-            
+
             String response = webClient.post()
                     .uri("/chat/completions")
                     .bodyValue(requestBody)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
                         if (clientResponse.statusCode().value() == 429) {
+                            log.warn("Groq rate limit exceeded");
                             return Mono.error(new RateLimitException("Groq", "Rate limit exceeded"));
                         }
                         return clientResponse.bodyToMono(String.class)
-                                .flatMap(body -> Mono.error(new AIProviderException("Groq", "Client error: " + body)));
+                                .defaultIfEmpty("Unknown client error")
+                                .flatMap(body -> {
+                                    log.error("Groq client error: {}", body);
+                                    return Mono.error(new AIProviderException("Groq", "Client error: " + body));
+                                });
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
-                                    .flatMap(body -> Mono.error(new AIProviderException("Groq", "Server error: " + body))))
+                                    .defaultIfEmpty("Unknown server error")
+                                    .flatMap(body -> {
+                                        log.error("Groq server error: {}", body);
+                                        return Mono.error(new AIProviderException("Groq", "Server error: " + body));
+                                    }))
                     .bodyToMono(String.class)
                     .timeout(Duration.ofSeconds(config.getGroq().getTimeoutSeconds()))
+                    .doOnError(error -> log.error("Groq API call failed: {}", error.getMessage()))
+                    .onErrorMap(java.util.concurrent.TimeoutException.class,
+                            e -> new AIProviderException("Groq", "Request timeout after " + config.getGroq().getTimeoutSeconds() + " seconds"))
                     .block();
-            
+
+            if (response == null || response.isEmpty()) {
+                throw new AIProviderException("Groq", "Empty response from API");
+            }
+
             return extractTextFromOpenAIResponse(response);
-            
+
         } catch (RateLimitException e) {
+            log.warn("Groq rate limit exception: {}", e.getMessage());
+            throw e;
+        } catch (AIProviderException e) {
+            log.error("Groq AI provider exception: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("Error calling Groq API: {}", e.getMessage(), e);
+            log.error("Unexpected error calling Groq API: {}", e.getMessage(), e);
             throw new AIProviderException("Groq", "Failed to call Groq API: " + e.getMessage(), e);
         }
     }
